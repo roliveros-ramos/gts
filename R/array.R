@@ -1,16 +1,15 @@
 
 
-#' Title
+#' Seasonal Decomposition of Gridded Time Series
 #'
-#' @param x
-#' @param frequency
-#' @param s.window
-#' @param ...
+#' @param x An array with a time dimension.
+#' @param frequency The frequency in time-steps per year, default to 12.
+#' @param s.window Only "periodic" is supported now.
+#' @param ... Additional arguments controling the methods.
 #'
-#' @return
+#' @return A list, with the trend, seasonal and residual components.
 #' @export
 #'
-#' @examples
 stl_array = function(x, frequency=12, s.window="periodic", ...) {
   # optimize, do loop?
 
@@ -42,20 +41,16 @@ stl_array = function(x, frequency=12, s.window="periodic", ...) {
 }
 
 
-
-
-
-#' Title
+#' Seasonal Decomposition of Gridded Time Series
 #'
-#' @param x
-#' @param frequency
-#' @param s.window
-#' @param ...
+#' @param x An array with a time dimension.
+#' @param frequency The frequency in time-steps per year, default to 12.
+#' @param s.window Only "periodic" is supported now.
+#' @param ... Additional arguments controling the methods.
 #'
-#' @return
+#' @return A list, with the trend, seasonal and residual components.
 #' @export
 #'
-#' @examples
 stl_array2 = function(x, frequency=12, s.window="periodic", ...) {
   # optimize, do loop?
 

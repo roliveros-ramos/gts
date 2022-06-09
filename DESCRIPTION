@@ -1,11 +1,14 @@
 Package: gts
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Gridded Time-Series
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Ricardo Oliveros-Ramos
+Maintainer: Ricardo Oliveros-Ramos <ricardo.oliveros@gmail.com>
+Description: Management of gridded time-series (arrays with a time dimension),
+    normally geographical (longitude, latitude, depth/altitude). The package provides
+    methods to read and write gridded time-series (GTS) objects and manage them using
+    R time-series methods. 
+License: GPL-2
 Encoding: UTF-8
-LazyData: true
+LazyData: TRUE
+RoxygenNote: 7.1.2

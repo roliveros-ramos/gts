@@ -16,7 +16,7 @@ read_gts(filename, varid, control = list(), ...)
 \item{...}{Additional arguments.}
 }
 \value{
-
+A gts object
 }
 \description{
 Read a netCDF variable into a Gridded Time-Series.

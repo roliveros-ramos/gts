@@ -18,7 +18,7 @@ merge_gts(x, y, dt = "month", dimnames = NULL, ...)
 \item{...}{Additional arguments.}
 }
 \value{
-
+A data.frame with the corresponding values of the variable from the GTS object.
 }
 \description{
 Merge a data.frame and a GTS object.

@@ -11,4 +11,4 @@ Description: Management of gridded time-series (arrays with a time dimension),
 License: GPL-2
 Encoding: UTF-8
 LazyData: TRUE
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0

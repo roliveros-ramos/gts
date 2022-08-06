@@ -1,4 +1,8 @@
 
+if(!isGeneric("merge")) {
+  setGeneric("merge", function(x, y, ...)
+    standardGeneric("merge"))
+}
 
 # merge -------------------------------------------------------------------
 
@@ -11,7 +15,6 @@
 #' @param ... Additional arguments.
 #'
 #' @return A data.frame with the corresponding values of the variable from the GTS object.
-#' @export
 #'
 merge_gts = function(x, y, dt="month", dimnames=NULL, ...) {
 
@@ -52,4 +55,9 @@ merge_gts = function(x, y, dt="month", dimnames=NULL, ...) {
 
 }
 
+
+# Methods -----------------------------------------------------------------
+
+
+setMethod('merge', signature(x='data.frame', y='gts'), merge_gts)
 

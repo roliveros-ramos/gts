@@ -4,14 +4,17 @@
 \alias{read_gts}
 \title{Read a netCDF variable into a Gridded Time-Series.}
 \usage{
-read_gts(filename, varid, control = list(), ...)
+read_gts(filename, varid = NULL, control = list(), ...)
 }
 \arguments{
 \item{filename}{The filename of the netCDF file.}
 
-\item{varid}{Name of the variable in the file.}
+\item{varid}{String with  the name of the variable in the file to read the
+data from. If left unspecified, the function will determine if there is only
+one variable in the file and, if so, read from that. If left unspecified and
+there are multiple variables in the file, an error is generated.}
 
-\item{control}{Additional options, currently not used.}
+\item{control}{A list with additional options, particularly the time units and origin when not specified in the file.}
 
 \item{...}{Additional arguments.}
 }

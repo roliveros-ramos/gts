@@ -21,3 +21,9 @@ vignettes/*.pdf
 # vim backup
 
 *~
+
+# personal files
+
+TODO.Rmd
+sandbox.R
+

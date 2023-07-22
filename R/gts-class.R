@@ -52,33 +52,76 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     ind   = which(ndims>2)
     if(length(ind)==0) stop("No suitable variables found in file.")
     if(length(ind)!=1) {
-      vs = paste(varid[ind], sep="", collapse=", ")
-      message("Variables found in file:", vs)
-      stop("More than one variable in the file, must specify 'varid'.")
+        vs = paste(varid[ind], sep="", collapse=", ")
+      if(!is.null(control$use_first)) {
+        ind = ind[1]
+        if(!isTRUE(control$use_first)) {
+          message("Variables found in file:", vs)
+          stop("More than one variable in the file, must specify 'varid'.")
+        }
+      } else {
+        message("Variables found in file:", vs)
+        stop("More than one variable in the file, must specify 'varid'.")
+      }
     }
     varid = varid[ind]
     message(sprintf("Reading variable '%s'.", varid))
   }
-
-  x = ncvar_get(nc, varid=varid, collapse_degen = FALSE)
 
   gatt = ncatt_get(nc, varid=0)
 
   tmp = ncatt_get(nc, varid=varid, attname = "units")
   var_unit = if(tmp$hasatt) tmp$value else ""
 
-  hasdepth = if(length(dim(x))==4) TRUE else FALSE
+  ndimx = nc$var[[varid]]$varsize
+  hasdepth = if(length(ndimx)==4) TRUE else FALSE
 
   time_unit = control$time_unit
   origin = control$origin
 
   dimx = ncvar_dim(nc, varid=varid, value=TRUE)
   dims = sapply(dimx, length)
+  time = tail(names(dimx), 1)
 
-  if(length(dimx)<3) stop("At leat (lon, lat, time) array is needed.")
+  if(length(dimx)<3) stop("At least (lon, lat, time) array is needed.")
   if(length(dimx)>4) stop("More than 4-dimensions are not supported.")
 
-  time = tail(names(dimx), 1)
+  is_monot = all(sapply(dimx, FUN=is_monotonic))
+  if(!is_monot) stop("Variable dimensions have non-monotonic values.")
+
+  x = ncvar_get(nc, varid=varid, collapse_degen = FALSE)
+
+  ## validation of dimensions
+  if(is_decreasing(dimx[[1]])) {
+    warning("First dimension has decreasing values: fixing it.")
+    dimx[[1]] = rev(dimx[[1]])
+    ind = rev(seq_along(dimx[[1]]))
+    x = if(hasdepth) x[ind, , , , drop=FALSE] else x[ind, , , drop=FALSE]
+  }
+
+  if(is_decreasing(dimx[[2]])) {
+    warning("Second dimension has decreasing values: fixing it.")
+    dimx[[2]] = rev(dimx[[2]])
+    ind = rev(seq_along(dimx[[2]]))
+    x = if(hasdepth) x[, ind, , , drop=FALSE] else x[, ind, , drop=FALSE]
+  }
+
+  if(hasdepth) {
+    if(is_decreasing(dimx[[3]])) {
+      warning("Third dimension has decreasing values: fixing it.")
+      dimx[[3]] = rev(dimx[[3]])
+      ind = rev(seq_along(dimx[[3]]))
+      x = x[, , ind, , drop=FALSE]
+    }
+  }
+
+  if(is_decreasing(dimx[[time]])) {
+    warning("Time dimension has decreasing values: fixing it.")
+    dimx[[time]] = rev(dimx[[time]])
+    ind = rev(seq_along(dimx[[time]]))
+    x = if(hasdepth) x[, , , ind, drop=FALSE] else x[, , ind, drop=FALSE]
+  }
+  ##
 
   if(is.null(time_unit)) {
     tmp = ncatt_get(nc, varid=time, attname = "units")
@@ -91,11 +134,19 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
       tab = guess_origin(dimx[[time]])
       message("Here are some guesses from time values, please check carefully.")
       print(tab)
-      message(sprintf("Try read_gts(..., control=list(time_unit='%s', origin='%s'))",
-                      tab$units[1], tab$origin[1]))
+      message(sprintf("Try 'read_gts(..., control=list(time_unit='%s', origin='%s'))'",
+                      tab$time_unit[1], tab$origin[1]))
       stop("Must specify time unit and origin manually.")
     }
     origin = parse_date_time(tunit, orders = c("Ymd", "YmdHMS", "dmY", "dmYHMS"))
+    tmp = ncatt_get(nc, varid=time, attname = "calendar")
+    tcal = if(tmp$hasatt) tmp$value else NULL
+    if(!is.null(tcal)) {
+      if(tcal=="gregorian") tcal = "365.2425"
+      tcal = as.numeric(gsub(x=tcal, pattern="[^0-9].*", replacement = ""))
+      if(!(tcal %in% c(360, 365, 364, 364.25, 365.2425, 365.25)))
+        warning(sprintf("Using calendar year of %s days.", tcal))
+    }
   }
 
   depth_conf = list(depth_unit = NULL, depth=NULL)
@@ -110,17 +161,18 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   if(is.null(origin)) stop("You must especify time origin.")
 
   time_conf = list(time_unit=time_unit, origin=origin, time=dimx[[time]],
-                   units = sprintf("%s since %s", time_unit, origin))
+                   units = sprintf("%s since %s", time_unit, origin),
+                   calendar=tcal)
 
   breaks = lapply(dimx, FUN=.getBreaks)
 
   new_time = time2date(dimx[[time]], units=time_conf$time_unit,
-                       origin=time_conf$origin)
+                       origin=time_conf$origin, calendar=time_conf$calendar)
 
   tt = get_time(new_time[1])
-  ff = get_freq(new_time)
+  ff = get_freq(new_time, freq=control$freq)
   myts = ts(seq_along(new_time), start=c(year(new_time[1]),
-                                         ceiling((tt%%1)*ff)), freq=ff)
+                                         floor((tt%%1)*ff) + 1), freq=ff)
 
   ilat = grep(x=tolower(names(nc$var)), pattern="lat")
   ilon = grep(x=tolower(names(nc$var)), pattern="lon")
@@ -135,6 +187,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
 
   if(length(dim(longitude))<2) {
     LON = matrix(longitude, nrow=dims[1], ncol=dims[2])
+    pLON = matrix(breaks[[1]], nrow=dims[1]+1, ncol=dims[2]+1)
     nlon = longitude
     lon_name = "longitude"
     lon_var = NULL
@@ -142,6 +195,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     lon_unit = NULL
   } else {
     LON = longitude
+    pLON = NULL
     nlon = seq_len(dims[1])
     breaks[[1]] = NA
     lon_name = "i"
@@ -152,6 +206,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
 
   if(length(dim(latitude))<2) {
     LAT = matrix(latitude, nrow=dims[1], ncol=dims[2], byrow=TRUE)
+    pLAT = matrix(breaks[[2]], nrow=dims[1]+1, ncol=dims[2]+1)
     nlat = latitude
     lat_name = "latitude"
     lat_var = NULL
@@ -159,6 +214,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     lat_unit = NULL
   } else {
     LAT = latitude
+    pLAT = NULL
     nlat = seq_len(dims[2])
     breaks[[2]] = NA
     lat_name = "j"
@@ -182,7 +238,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   units = c(lon_unit, lat_unit, var_unit)
 
   grid = list(longitude=longitude, latitude=latitude, rho=list(LON=LON, LAT=LAT),
-              psi=NULL, LON=LON, LAT=LAT, area=NULL, mask=NULL,
+              psi=list(LON=pLON, LAT=pLAT), LON=LON, LAT=LAT, area=NULL, mask=NULL,
               df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
   class(grid) =  c("grid", class(grid))
 

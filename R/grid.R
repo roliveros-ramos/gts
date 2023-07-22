@@ -14,7 +14,7 @@
 #' @examples
 #' grid = make_grid(lon=c(2, 9), lat=c(40,45), dx=1/12, dy=1/12, n=1)
 #' plot(grid)
-make_grid = function(lon=lon, lat=lat, dx=dx, dy=dy, n=1, thr=0.8, hires=FALSE, mask=TRUE) {
+make_grid = function(lon, lat, dx, dy=dx, n=1, thr=0.8, hires=FALSE, mask=TRUE) {
 
   lon = range(lon, na.rm=TRUE)
   lat = range(lat, na.rm=TRUE)
@@ -32,6 +32,9 @@ make_grid = function(lon=lon, lat=lat, dx=dx, dy=dy, n=1, thr=0.8, hires=FALSE, 
     grid$n     = 0
     grid$hires = FALSE
   }
+
+  # info to write_ncdf.grid
+  grid$info = .grid_info(grid)
 
   class(grid) = c("grid", class(grid))
   return(grid)
@@ -51,6 +54,190 @@ update_grid = function(grid, thr) {
   grid$mask = 0 + (grid$prob >= thr)
   return(grid)
 }
+
+
+#' Read the grid from a file
+#'
+#' @param mask Variable with an actual mask for the grid, must be of dimension 2.
+#' @param varid Variable used to create the mask, see details.
+#' @param create_mask Should we create a new mask using the same algorithm as \link{make_grid}?
+#' @param ... Additional arguments passed to the \link{make_grid} function, mainly 'n', 'thr' and 'hires'.
+#'
+#' @inheritParams read_gts
+#' @return Return the grid associated to the variables in the file.
+#' @export
+#'
+#' @examples read_grid()
+read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
+
+  control = list(...)
+
+  nc = nc_open(filename = filename)
+  on.exit(nc_close(nc))
+
+  if(!is.null(mask) & !is.null(varid))
+    warning("Ignoring 'varid', using 'mask' for calculations.")
+  if(!is.null(mask)) varid = mask
+
+  if(is.null(varid)) {
+    varid = names(nc$var)
+    ndims = sapply(nc$var, FUN="[[", i="ndims")
+    ind   = which(ndims>=2)
+    if(length(ind)==0) stop("No suitable variables found in file.")
+    if(length(ind)!=1) {
+      ind = ind[1]
+    }
+    varid = varid[ind]
+  }
+
+  ndimx = nc$var[[varid]]$varsize
+  hasdepth = if(length(ndimx)==4) TRUE else FALSE
+
+  dimx = ncvar_dim(nc, varid=varid, value=TRUE)
+  dims = sapply(dimx, length)
+
+  is_monot = all(sapply(dimx, FUN=is_monotonic))
+  if(!is_monot) stop("Variable dimensions have non-monotonic values.")
+
+  x = ncvar_get(nc, varid=varid, collapse_degen = FALSE)
+
+  ## validation of dimensions
+  if(is_decreasing(dimx[[1]])) {
+    warning("First dimension has decreasing values: fixing it.")
+    dimx[[1]] = rev(dimx[[1]])
+    ind = rev(seq_along(dimx[[1]]))
+    x = if(hasdepth) x[ind, , , , drop=FALSE] else x[ind, , , drop=FALSE]
+  }
+
+  if(is_decreasing(dimx[[2]])) {
+    warning("Second dimension has decreasing values: fixing it.")
+    dimx[[2]] = rev(dimx[[2]])
+    ind = rev(seq_along(dimx[[2]]))
+    x = if(hasdepth) x[, ind, , , drop=FALSE] else x[, ind, , drop=FALSE]
+  }
+
+  if(hasdepth) {
+    if(is_decreasing(dimx[[3]])) {
+      warning("Third dimension has decreasing values: fixing it.")
+      dimx[[3]] = rev(dimx[[3]])
+      ind = rev(seq_along(dimx[[3]]))
+      x = x[, , ind, , drop=FALSE]
+    }
+  }
+
+  depth_conf = list(depth_unit = NULL, depth=NULL)
+  depth_name = NULL
+  if(hasdepth) {
+    tmp = ncatt_get(nc, varid=names(dimx)[3], attname = "units")
+    dunit = if(tmp$hasatt) tmp$value else NULL
+    depth_conf = list(depth_unit=dunit, depth=dimx[[3]])
+    depth_name = "depth"
+  }
+
+  breaks = lapply(dimx, FUN=.getBreaks)
+
+  ilat = grep(x=tolower(names(nc$var)), pattern="lat")
+  ilon = grep(x=tolower(names(nc$var)), pattern="lon")
+
+  if(length(ilat)==1 & length(ilon)==1) {
+    longitude = ncvar_get(nc, names(nc$var)[ilon])
+    latitude  = ncvar_get(nc, names(nc$var)[ilat])
+  } else {
+    longitude = dimx[[1]]
+    latitude  = dimx[[2]]
+  }
+
+  if(length(dim(longitude))<2) {
+    LON = matrix(longitude, nrow=dims[1], ncol=dims[2])
+    pLON = matrix(breaks[[1]], nrow=dims[1]+1, ncol=dims[2]+1)
+    nlon = longitude
+    lon_name = "longitude"
+    lon_var = NULL
+    dlon_unit = "degrees East"
+    lon_unit = NULL
+  } else {
+    LON = longitude
+    pLON = NULL
+    nlon = seq_len(dims[1])
+    breaks[[1]] = NA
+    lon_name = "i"
+    lon_var = "longitude"
+    dlon_unit = ""
+    lon_unit = "degrees East"
+  }
+
+  if(length(dim(latitude))<2) {
+    LAT = matrix(latitude, nrow=dims[1], ncol=dims[2], byrow=TRUE)
+    pLAT = matrix(breaks[[2]], nrow=dims[1]+1, ncol=dims[2]+1)
+    nlat = latitude
+    lat_name = "latitude"
+    lat_var = NULL
+    dlat_unit = "degrees North"
+    lat_unit = NULL
+  } else {
+    LAT = latitude
+    pLAT = NULL
+    nlat = seq_len(dims[2])
+    breaks[[2]] = NA
+    lat_name = "j"
+    lat_var = "latitude"
+    dlat_unit = ""
+    lat_unit = "degrees North"
+  }
+
+  dimnames(LON) = dimnames(LAT) = list(x=nlon, y=nlat)
+
+  odim = if(hasdepth) list(nlon, nlat, dimx[[3]]) else list(nlon, nlat)
+  names(odim) = c(lon_name, lat_name, depth_name)
+
+  dim.units = c(dlon_unit, dlat_unit, depth_conf$depth_unit)
+  names(dim.units) = c(lon_name, lat_name, depth_name)
+
+  grid = list(longitude=longitude, latitude=latitude, rho=list(LON=LON, LAT=LAT),
+              psi=list(LON=pLON, LAT=pLAT), LON=LON, LAT=LAT, area=NULL, mask=NULL,
+              df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
+  class(grid) =  c("grid", class(grid))
+
+  grid = fill(grid, control=list(create_psi=TRUE))
+  grid$area = suppressMessages(area(grid))
+
+  # creating mask
+  if(isTRUE(create_mask)) {
+    if(is.null(control$hires)) control$hires = FALSE
+    mm = .create_mask(grid=grid, n=control$n, thr=control$thr, hires=control$hires)
+    grid$mask  = mm$mask
+    grid$prob  = mm$ocean
+    grid$n     = mm$n
+    grid$hires = control$hires
+  } else {
+    # we will modify the data so it ends being a matrix with 1s and NAs.
+    .mask = function(x) 0 + !all(is.na(x))
+    x = drop(x)
+    if(!is.null(mask)) {
+      if(length(dim(x))!=2) stop("'mask' must be a variable of dimension 2.")
+    } else {
+      if(length(dim(x))>4) stop("Variables of dimensions greater than 4 are not supported.")
+      if(length(dim(x))>=3) x = apply(x, head(seq_along(dim(x)), -1), FUN=.mask)
+      if(length(dim(x))==3) x = x[,,1] # after sorting depth, this is 'surface'
+      if(length(dim(x))<2) stop(sprintf("Variable '%s' has dimension lower than 2.", varid))
+    }
+    x = x/x # 0s become NaN, so NA.
+    x[is.na(x)] = NA
+
+    grid$mask  = x
+    grid$prob  = NULL
+    grid$n     = NULL
+    grid$hires = NULL
+
+  }
+
+  # info to write_ncdf.grid
+  grid$info = .grid_info(grid)
+
+  return(grid)
+
+}
+
 # Methods -----------------------------------------------------------------
 
 #' @exportS3Method plot grid
@@ -96,10 +283,10 @@ plot.grid = function(x, land.col="darkolivegreen4", sea.col="aliceblue", prob=FA
 is_ocean = function(lon, lat, hires=FALSE) {
 
   coords = cbind(lon=lon, lat=lat)
+  out = rep(FALSE, length=nrow(coords))
+  out[which(!complete.cases(coords))] = NA
   xind = which(complete.cases(coords))
   coords = coords[xind, ]
-
-  out = rep(FALSE, length=nrow(coords))
 
   layer = if(isTRUE(hires)) land_hr else land_lr
 
@@ -188,35 +375,6 @@ is_land = function(lon, lat, hires=FALSE) return(!is_ocean(lon, lat, hires))
   return(expand.grid(y=y, x=x)[, 2:1])
 }
 
-.create_mask = function(lon, lat, dx, dy, n=2, thr=0.8, hires=FALSE) {
-
-  grid = .create_grid(lon=lon, lat=lat, dx=dx, dy=dy)
-  off  = .grid_offset(n=n, dx=dx, dy=dy)
-
-  if(is.null(off)) {
-    out = grid$df
-  } else {
-    out = list()
-    for(i in seq_len(nrow(off))) {
-      tmp = grid$df
-      tmp$lon = tmp$lon + off$x[i]
-      tmp$lat = tmp$lat + off$y[i]
-      out[[i]] = tmp
-    }
-    out = do.call(rbind, out)
-  }
-
-  ind = is_ocean(lon=out$lon, lat=out$lat, hires=hires)
-
-  gg = array(0 + ind, dim=c(dim(grid$area), nrow(off)))
-  gg = apply(gg, 1:2, mean)
-
-  mask = 0 + (gg >= thr)
-
-  output = list(mask=mask, ocean=gg, n=nrow(off)+1)
-
-  return(output)
-}
 
 .getBreaks = function(x) {
   out = c(x[1] - 0.5*(diff(x[1:2])),
@@ -260,10 +418,44 @@ interp_grid = function(grid) {
 }
 
 .mask_correction = function(x, mask) {
-
   if(is.null(mask)) return(x)
   mask[mask==0] = NA
   x = x*as.numeric(mask)
   return(x)
 }
 
+.grid_info = function(grid) {
+  dim = list()
+  units = NULL
+  dim.units = NULL
+  ovarid = NULL
+  if(length(dim(grid$longitude))==2) {
+    dim$i = seq_len(nrow(grid$longitude))
+    ovarid = c(ovarid, "longitude")
+    units = c(units, longitude="degrees East")
+    dim.units = c(dim.units, i="index")
+  } else {
+    dim$longitude = grid$longitude
+    dim.units = c(dim.units, longitude="degrees East")
+  }
+
+  if(length(dim(grid$latitude))==2) {
+    dim$j = seq_len(ncol(grid$latitude))
+    ovarid = c(ovarid, "latitude")
+    units = c(units, latitude="degrees North")
+    dim.units = c(dim.units, j="index")
+  } else {
+    dim$latitude = grid$latitude
+    dim.units = c(dim.units, latitude="degrees North")
+  }
+
+  ovarid = c(ovarid, "mask", "area")
+  # TO_DO: store area units in the grid file!
+  units = c(units, mask="0=land/1=ocean", area="km2")
+  # end of info to write_ncdf.grid
+
+  out = list(varid="mask", units=units, dim = dim, dim.units=dim.units,
+             ovarid=ovarid, var=ovarid)
+
+  return(out)
+}

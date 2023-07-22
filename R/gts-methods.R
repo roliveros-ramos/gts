@@ -8,6 +8,12 @@ is.na.gts = function(x) {
 }
 
 #' @export
+dim.gts = function(x) dim(x$x)
+
+#' @export
+dim.grid = function(x) dim(x$LON)
+
+#' @export
 Math.gts = function(x, ...) {
   if(.Generic %in% c("cummax", "cummin", "cumprod", "cumsum"))
     stop(gettextf("'%s' not defined for \"gts\" objects",
@@ -54,9 +60,32 @@ Ops.gts = function(e1, e2) {
   }
 }
 
+#' @export
+Summary.gts = function(x, ..., na.rm = TRUE) {
 
+  # is_gts = sapply(..., FUN=is, class2="gts")
+  # if(any(is_gts)) {
+  #   for(i in seq_along(...)) {
+  #     if(is_gts[i]) ...[[i]] = ...[[i]]$x
+  #   }
+  # }
+  get(.Generic, mode="function")(x$x, na.rm=na.rm)
+}
+
+#' @export
+print.gts = function(x, ...) {
+  cat(sprintf("Gridded Time Series: %s (%s)\n", x$info$varid, tail(x$info$units, 1)))
+  cat(sprintf("Start     = %s\n", min(x$time)))
+  cat(sprintf("End       = %s\n", max(x$time)))
+  cat(sprintf("Frequency = %s\n", frequency(x)))
+  # cat(sprintf("Spatial Dimension = [%s,%s]\n", dim(x)[1], dim(x)[2]))
+  rlon = range(x$longitude)
+  rlat = range(x$latitude)
+  cat(sprintf("Longitude = [%0.2f, %0.2f]\n", rlon[1], rlon[2]))
+  cat(sprintf("Latitude  = [%0.2f, %0.2f]\n", rlat[1], rlat[2]))
+  return(invisible(NULL))
+}
 # S4 compatibility --------------------------------------------------------
-
 
 setOldClass("gts")
 setOldClass("grid")

@@ -56,9 +56,10 @@ get_date = function(x) {
   return(out)
 }
 
-get_freq = function(x, tolerance=0) {
+get_freq = function(x, tolerance=0, freq=NULL) {
 
   if(length(x)==1) {
+    if(!is.null(freq)) return(freq)
     warning("Not enough values to compute frequency.")
     return(NA)
   }
@@ -135,12 +136,40 @@ popular_integer = function(x, tolerance=sqrt(.Machine$double.eps)) {
 }
 
 
-time2date = function(x, units="seconds", origin="1970-01-01") {
+time2date = function(x, units="seconds", origin="1970-01-01", calendar=NULL) {
   if(inherits(origin, "character"))
     origin = parse_date_time(origin, orders = c("Ymd", "YmdHMS", "dmY", "dmYHMS"))
   if(is.na(origin)) stop("Origin must be a rightful date.")
-  nt = do.call(period, args=setNames(list(x), nm=units))
-  new_time = origin + nt
+  nt = try(do.call(period, args=setNames(list(x), nm=units)), silent = TRUE)
+  if(inherits(nt, "try-error")) {
+    if(units=="month") {
+      xnt = do.call(period, args=setNames(list(floor(x)), nm=units))
+      xtime = origin + xnt
+      dim = if(calendar==365) days_in_month(xtime) else 30
+      xx = (x%%1)*dim*24*60*60
+      new_time = xtime + seconds(xx)
+    }
+    if(units=="year") {
+      xnt = do.call(period, args=setNames(list(floor(x)), nm=units))
+      xtime = origin + xnt
+      xx = (x%%1)*calendar*24*60*60
+      new_time = xtime + seconds(xx)
+    }
+    if(units=="week") {
+      xnt = do.call(period, args=setNames(list(floor(x)), nm=units))
+      xtime = origin + xnt
+      xx = (x%%1)*7*24*60*60
+      new_time = xtime + seconds(xx)
+    }
+    if(units=="day") {
+      xnt = do.call(period, args=setNames(list(floor(x)), nm=units))
+      xtime = origin + xnt
+      xx = (x%%1)*24*60*60
+      new_time = xtime + seconds(xx)
+    }
+  } else {
+    new_time = origin + nt
+  }
   return(new_time)
 }
 

@@ -4,16 +4,7 @@
 \alias{make_grid}
 \title{Make a rectangular grid}
 \usage{
-make_grid(
-  lon = lon,
-  lat = lat,
-  dx = dx,
-  dy = dy,
-  n = 1,
-  thr = 0.8,
-  hires = FALSE,
-  mask = TRUE
-)
+make_grid(lon, lat, dx, dy = dx, n = 1, thr = 0.8, hires = FALSE, mask = TRUE)
 }
 \arguments{
 \item{lon}{Longitude of the left and right corners of the grid.}

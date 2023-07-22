@@ -3,17 +3,20 @@
 \name{fill}
 \alias{fill}
 \alias{fill.default}
+\alias{fill.array}
 \alias{fill.grid}
 \alias{fill.gts}
 \title{Fill missing values in an array}
 \usage{
 fill(x, ...)
 
-\method{fill}{default}(x, method, control = list(), ...)
+\method{fill}{default}(x, method = "akima", control = list(), ...)
 
-\method{fill}{grid}(x, method, control = list(), ...)
+\method{fill}{array}(x, method = "akima", control = list(), ...)
 
-\method{fill}{gts}(x, method, control = list(), ...)
+\method{fill}{grid}(x, method = "akima", control = list(), ...)
+
+\method{fill}{gts}(x, method = "akima", control = list(), ...)
 }
 \arguments{
 \item{x}{A matrix or a supported array (e.g. a gts::gts object).}

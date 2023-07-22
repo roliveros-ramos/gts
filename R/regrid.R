@@ -24,11 +24,17 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
 
   if(inherits(grid, "gts")) grid = grid$grid
 
+  ndim = if(!is.null(grid$mask)) dim(grid$mask) else dim(grid$LAT)
+  if(is.null(ndim)) ndim = dim(grid$longitude)
+  if(is.null(ndim)) ndim = c(length(grid$longitude), length(grid$latitude))
+  if(is.null(ndim)) stop("The grid has no the proper information.")
+
   MARGIN = seq_along(dim(object$x))[-c(1,2)]
   xx = apply(object$x, MARGIN, .interp, x=object$longitude, y=object$latitude,
              xout=grid$longitude, yout=grid$latitude, method=method, extrap=extrap,
              control=control, ...)
-  dim(xx) = c(dim(grid$LAT), dim(object$x)[-c(1,2)])
+
+  dim(xx) = c(ndim, dim(object$x)[-c(1,2)])
 
   # mask correction
   xx = .mask_correction(x=xx, mask=grid$mask)

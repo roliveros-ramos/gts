@@ -38,7 +38,7 @@ interpolate = function(x, y, z, ...) {
   output = .check_output(x=xout, y=yout)
 
   case = sprintf("%s%s", c("r", "i", "i")[input$case], c("r", "i", "i")[output$case])
-  FUN = match.fun(sprintf(".%s_%s", method, case))
+  FUN = get(sprintf(".%s_%s", method, case), mode="function")
 
   if(input$hasNA) {
     x = input$data$x

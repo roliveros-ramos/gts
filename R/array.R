@@ -54,7 +54,7 @@ stl_array = function(x, frequency=12, s.window="periodic", ...) {
 stl_array2 = function(x, frequency=12, s.window="periodic", ...) {
   # optimize, do loop?
 
-  kali::DateStamp("Starting...")
+  DateStamp("Starting...")
 
   .stl_array = function(x, frequency, s.window, ...) {
     xna = rep(NA, length=length(x))
@@ -92,7 +92,7 @@ stl_array2 = function(x, frequency=12, s.window="periodic", ...) {
   pb = txtProgressBar(style=3)
   setTxtProgressBar(pb, 1)
 
-  kali::DateStamp("Finishing at")
+  DateStamp("Finishing at")
 
   return(out)
 

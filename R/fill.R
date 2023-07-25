@@ -29,13 +29,15 @@ fill.default = function(x, method="akima", control=list(), ...) {
   x0 = row(x)
   y0 = col(x)
 
-  if(!is.null(control$link)) {
-    trans = gaussian(link=control$link)
-    xi = suppressWarnings(.interp(x=x0, y=y0, z=trans$linkfun(x), xout=x0, yout=y0, method=method, extrap=TRUE, control=control, ...))
-    xi = trans$linkinv(xi)
-  } else {
-    xi = suppressWarnings(.interp(x=x0, y=y0, z=x, xout=x0, yout=y0, method=method, extrap=TRUE, control=control, ...))
-  }
+  # if(!is.null(control$link)) {
+  #   trans = gaussian(link=control$link)
+  #   xi = suppressWarnings(.interp(x=x0, y=y0, z=trans$linkfun(x), xout=x0, yout=y0, method=method, extrap=TRUE, control=control, ...))
+  #   xi = trans$linkinv(xi)
+  # } else {
+  #   xi = suppressWarnings(.interp(x=x0, y=y0, z=x, xout=x0, yout=y0, method=method, extrap=TRUE, control=control, ...))
+  # }
+
+  xi = suppressWarnings(.interp(x=x0, y=y0, z=x, xout=x0, yout=y0, method=method, extrap=TRUE, control=control, ...))
 
   if(isTRUE(control$keep_range)) {
     xi[(xi < xlim[1]) | (xi > xlim[2])] = NA

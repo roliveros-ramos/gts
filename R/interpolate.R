@@ -34,6 +34,14 @@ interpolate = function(x, y, z, ...) {
 
   # check for arguments: x, y, z, xout, yout.
   # decide input and output types
+
+  use_link = !is.null(control$link)
+  if(use_link) {
+    trans = gaussian(link=control$link)
+    z = suppressWarnings(trans$linkfun(z))
+    control$link = NULL
+  }
+
   input  = .check_input(x=x, y=y, z=z)
   output = .check_output(x=xout, y=yout)
 
@@ -53,6 +61,8 @@ interpolate = function(x, y, z, ...) {
     out$x = xout
     out$y = yout
   }
+
+  if(use_link) out$z = trans$linkinv(out$z)
 
   return(out)
 

@@ -1,8 +1,21 @@
 
-#' @export
-subset.gts = function(x, longitude=NULL, latitude=NULL, ...) {
 
-  x$grid = subset(x$grid, longitude=longitude, latitude=latitude, index.return=TRUE, ...)
+#' Subsetting a spatial time series object
+#'
+#' @param x the object to be subsetted.
+#' @param longitude The range of longitude to subset the grid.
+#' @param latitude The range of latitude to subset the grid.
+#' @param grid A grid object, or a 'gts' object.
+#' @param expand Number of units to expand the grid, generally degrees.
+#' It can be one number or two (longitude, latitude).
+#' @param ... further arguments to be passed to or from other methods.
+#'
+#' @return A 'gts' object after subsetting.
+#' @export
+#'
+subset.gts = function(x, longitude=NULL, latitude=NULL, grid=NULL, expand=0, ...) {
+
+  x$grid = subset(x$grid, longitude=longitude, latitude=latitude, index.return=TRUE, grid=grid, expand=expand, ...)
   x$longitude = x$grid$longitude
   x$latitude = x$grid$latitude
 
@@ -26,10 +39,24 @@ subset.gts = function(x, longitude=NULL, latitude=NULL, ...) {
 
 }
 
-#' @export
-subset.grid = function(x, longitude=NULL, latitude=NULL, index.return=FALSE, ...) {
 
-  if(is.null(longitude)&is.null(latitude)) return(x)
+#' @rdname subset.gts
+#' @export
+subset.grid = function(x, longitude=NULL, latitude=NULL, index.return=FALSE, grid=NULL, expand=0, ...) {
+
+  if(is.null(longitude)&is.null(latitude)&is.null(grid)) return(x)
+
+  if(length(expand)==1) expand = rep(expand, 2)
+  if(length(expand)>2) stop("Argument 'expand' must be of length 1 or 2.")
+
+  if(!is.null(grid)) {
+    if(inherits(grid, "gts")) grid = grid$grid
+    if(!inherits(grid, "grid")) stop("Argument 'grid' must be a grid object.")
+    nlongitude = range(grid$longitude, na.rm=TRUE)
+    nlatitude  = range(grid$latitude, na.rm=TRUE)
+    if(is.null(longitude)) longitude = nlongitude + expand[1]*c(-1, 1)
+    if(is.null(latitude))  latitude  = nlatitude + expand[2]*c(-1, 1)
+  }
 
   lon = if(!is.null(longitude)) range(longitude, na.rm=TRUE) else NULL
   lat = if(!is.null(latitude))  range(latitude, na.rm=TRUE)  else NULL

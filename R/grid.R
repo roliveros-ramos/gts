@@ -136,8 +136,8 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
 
   breaks = lapply(dimx, FUN=.getBreaks)
 
-  ilat = grep(x=tolower(names(nc$var)), pattern="lat")
-  ilon = grep(x=tolower(names(nc$var)), pattern="lon")
+  ilat = grep(x=tolower(names(nc$var)), pattern="^lat")
+  ilon = grep(x=tolower(names(nc$var)), pattern="^lon")
 
   if(length(ilat)==1 & length(ilon)==1) {
     longitude = ncvar_get(nc, names(nc$var)[ilon])
@@ -198,7 +198,8 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
               df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
   class(grid) =  c("grid", class(grid))
 
-  grid = fill(grid, control=list(create_psi=TRUE))
+
+  grid = fill(grid, control=list(create_psi=.is_regular_grid(grid)))
   grid$area = suppressMessages(area(grid))
 
   # creating mask
@@ -375,7 +376,6 @@ is_land = function(lon, lat, hires=FALSE) return(!is_ocean(lon, lat, hires))
   return(expand.grid(y=y, x=x)[, 2:1])
 }
 
-
 .getBreaks = function(x) {
   out = c(x[1] - 0.5*(diff(x[1:2])),
           head(x, -1) + 0.5*diff(x),
@@ -458,4 +458,18 @@ interp_grid = function(grid) {
              ovarid=ovarid, var=ovarid)
 
   return(out)
+}
+
+.is_regular_grid = function(x) {
+
+  if(inherits(x, "gts")) x = x$grid
+  almost.zero = function(x) (all(diff(x) < 1e-6))
+
+  reg_lon = all(apply(x$LON, 1, almost.zero))
+  reg_lat = all(apply(x$LAT, 2, almost.zero))
+
+  is_regular =  reg_lon & reg_lat
+
+  return(is_regular)
+
 }

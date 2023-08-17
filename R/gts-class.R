@@ -73,6 +73,9 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   tmp = ncatt_get(nc, varid=varid, attname = "units")
   var_unit = if(tmp$hasatt) tmp$value else ""
 
+  tmp = ncatt_get(nc, varid=varid, attname = "long_name")
+  long_name = if(tmp$hasatt) tmp$value else varid
+
   ndimx = nc$var[[varid]]$varsize
   hasdepth = if(length(ndimx)==4) TRUE else FALSE
 
@@ -174,8 +177,8 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   myts = ts(seq_along(new_time), start=c(year(new_time[1]),
                                          floor((tt%%1)*ff) + 1), freq=ff)
 
-  ilat = grep(x=tolower(names(nc$var)), pattern="lat")
-  ilon = grep(x=tolower(names(nc$var)), pattern="lon")
+  ilat = grep(x=tolower(names(nc$var)), pattern="^lat")
+  ilon = grep(x=tolower(names(nc$var)), pattern="^lon")
 
   if(length(ilat)==1 & length(ilon)==1) {
     longitude = ncvar_get(nc, names(nc$var)[ilon])
@@ -242,7 +245,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
               df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
   class(grid) =  c("grid", class(grid))
 
-  grid = fill(grid)
+  grid = fill(grid, control=control)
   grid$area = suppressMessages(area(grid))
 
   output = list(x = x,
@@ -252,7 +255,8 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
                 time      = new_time,
                 breaks    = breaks,
                 grid      = grid,
-                info      = list(varid=varid, time=time_conf, depth=depth_conf,
+                info      = list(varid=varid, long_name=long_name,
+                                 time=time_conf, depth=depth_conf,
                                  dim = odim, var=ovar, dim.units=dim.units,
                                  units=units, ovarid=ovarid, global=gatt, ts=myts))
 

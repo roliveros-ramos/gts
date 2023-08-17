@@ -63,7 +63,8 @@ fill.grid = function(x, method="akima", control=list(), ...) {
   # 1. check if LAT, LON have NAs, use inter_grid to use monotonicity.
   x = interp_grid(x)
 
-  if(is.null(control$create_psi)) control$create_psi = TRUE
+  is_regular = .is_regular_grid(x)
+  if(is.null(control$create_psi)) control$create_psi = is_regular
 
   is_null_psi = is.null(x$psi) | (is.null(x$psi$LAT) & is.null(x$psi$LON))
 
@@ -71,14 +72,37 @@ fill.grid = function(x, method="akima", control=list(), ...) {
 
   # 2. check if psi is NULL, create psi using c(NA, x, NA) and fill.
   if(is.null(x$psi) | is.null(x$psi$LAT) | is.null(x$psi$LON)) {
-    if(is.null(x$psi$LAT)) x$psi$LAT = cbind(NA, rbind(NA, x$LAT, NA), NA)
-    if(is.null(x$psi$LON)) x$psi$LON = cbind(NA, rbind(NA, x$LON, NA), NA)
-    pgrid = x$psi
-    pgrid$LON = fill(pgrid$LON, method=method, control=control, ...)
-    pgrid$LAT = fill(pgrid$LAT, method=method, control=control, ...)
-    pgrid$LON = roll(roll(pgrid$LON, 2, mean), 1, mean)
-    pgrid$LAT = roll(roll(pgrid$LAT, 1, mean), 2, mean)
-    x$psi = pgrid
+    if(is_regular) {
+
+      xlat = x$LAT[1, ]
+      xlon = x$LON[, 1]
+
+      nlat = length(xlat)
+      nlon = length(xlon)
+
+      xlat = c(2*xlat[1] - xlat[2], xlat, 2*xlat[nlat] - xlat[nlat-1])
+      xlon = c(2*xlon[1] - xlon[2], xlon, 2*xlon[nlon] - xlon[nlon-1])
+
+      xlat = matrix(xlat, nrow=nrow(x$LAT)+2, ncol=ncol(x$LAT)+2, byrow=TRUE)
+      xlon = matrix(xlon, nrow=nrow(x$LON)+2, ncol=ncol(x$LON)+2, byrow=FALSE)
+
+      pgrid = list(LON=xlon, LAT=xlat)
+      pgrid$LON = roll(roll(pgrid$LON, 2, mean), 1, mean)
+      pgrid$LAT = roll(roll(pgrid$LAT, 1, mean), 2, mean)
+      x$psi = pgrid
+
+    } else {
+
+      if(is.null(x$psi$LAT)) x$psi$LAT = cbind(NA, rbind(NA, x$LAT, NA), NA)
+      if(is.null(x$psi$LON)) x$psi$LON = cbind(NA, rbind(NA, x$LON, NA), NA)
+      pgrid = x$psi
+      pgrid$LON = fill(pgrid$LON, method=method, control=control, ...)
+      pgrid$LAT = fill(pgrid$LAT, method=method, control=control, ...)
+      pgrid$LON = roll(roll(pgrid$LON, 2, mean), 1, mean)
+      pgrid$LAT = roll(roll(pgrid$LAT, 1, mean), 2, mean)
+      x$psi = pgrid
+
+    }
   }
   return(x)
 }

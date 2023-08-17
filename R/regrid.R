@@ -33,6 +33,7 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
   xx = apply(object$x, MARGIN, .interp, x=object$longitude, y=object$latitude,
              xout=grid$longitude, yout=grid$latitude, method=method, extrap=extrap,
              control=control, ...)
+  # xx = unlist(xx)
 
   dim(xx) = c(ndim, dim(object$x)[-c(1,2)])
 

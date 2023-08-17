@@ -39,7 +39,8 @@ calculate_area = function(x, units=NULL) {
   if(!(units %in% names(punits))) stop(sprintf("Unit '%s' not supported.", units))
   fac = punits[units]
 
-  if(is.null(x$psi)) return(NULL)
+  is_null_psi = is.null(x$psi) | (is.null(x$psi$LAT) & is.null(x$psi$LON))
+  if(is_null_psi) return(NULL)
 
   pLON = x$psi$LON
   pLAT = x$psi$LAT

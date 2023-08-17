@@ -22,5 +22,5 @@ NULL
 NULL
 #' @importFrom colorful divergencePalette
 NULL
-#' @importFrom stats gaussian
+#' @importFrom stats gaussian integrate
 NULL

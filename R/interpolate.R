@@ -49,12 +49,22 @@ interpolate = function(x, y, z, ...) {
   FUN = get(sprintf(".%s_%s", method, case), mode="function")
 
   if(input$hasNA) {
+    if(nrow(input$data) < 3) {
+      out = list(x=xout, y=yout, z=NA*xout)
+      if(use_link) out$z = trans$linkinv(out$z)
+      warning("Not enough data points to interpolate, returning NAs.")
+      return(out)
+    }
     x = input$data$x
     y = input$data$y
     z = input$data$z
   }
 
-  out = FUN(x, y, z, xout, yout, method, extrap, control, ...)
+  out = try(FUN(x, y, z, xout, yout, method, extrap, control, ...))
+
+  if(inherits(out, "try-error")) {
+    print("error")
+  }
 
   if(output$case["is_gridI"]) {
     dim(out$z) = dim(xout)
@@ -64,6 +74,7 @@ interpolate = function(x, y, z, ...) {
 
   if(use_link) out$z = trans$linkinv(out$z)
 
+  # print(dim(out$z))
   return(out)
 
 }

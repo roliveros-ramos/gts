@@ -1,5 +1,3 @@
-#' @importFrom kali map_details image.map
-NULL
 #' @importFrom ncdf4 nc_open nc_close ncvar_get ncatt_get
 NULL
 #' @importFrom nctools ncvar_dim write_ncdf
@@ -23,4 +21,6 @@ NULL
 #' @importFrom colorful divergencePalette
 NULL
 #' @importFrom stats gaussian integrate
+NULL
+#' @importFrom maps map
 NULL

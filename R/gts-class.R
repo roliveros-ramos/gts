@@ -149,6 +149,8 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
       tcal = as.numeric(gsub(x=tcal, pattern="[^0-9].*", replacement = ""))
       if(!(tcal %in% c(360, 365, 364, 364.25, 365.2425, 365.25)))
         warning(sprintf("Using calendar year of %s days.", tcal))
+    } else {
+      tcal = 365
     }
   }
 

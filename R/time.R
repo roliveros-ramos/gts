@@ -19,6 +19,11 @@ end.gts = function(x, ...) {
   end(x$info$ts)
 }
 
+#' @export
+cycle.gts = function(x, ...) {
+  cycle(x$info$ts)
+}
+
 # add expansion to use dates (or characters)
 #' @export
 window.gts = function(x, ...) {
@@ -32,6 +37,30 @@ window.gts = function(x, ...) {
   x$info$dim$time = x$info$dim$time[ind]
   x$info$ts = ts(seq_along(x$time), start=start(nts), freq=frequency(nts))
   return(x)
+}
+
+#' @export
+climatology = function(x, ...) {
+  UseMethod("climatology")
+}
+
+#' @export
+climatology.gts = function(x, FUN="mean", ...) {
+  index = as.numeric(cycle(x))
+  values = seq_len(frequency(x))
+
+  clim = .climatology(x$x, index=index, values=values, FUN=FUN)
+
+  x$x = clim
+  x$time = values
+  x$breaks$time = .getBreaks(x$time)
+  x$info$time$time = tapply(x$info$time$time, INDEX = cycle(x), FUN="mean")
+  x$info$dim$time = values
+  x$info$ts = ts(values, frequency = frequency(x))
+  x$info$climatology = TRUE
+
+  return(x)
+
 }
 
 
@@ -114,6 +143,26 @@ guess_origin = function(time, nyear_max=100) {
   }
   guess = guess[complete.cases(guess), ]
   return(guess)
+}
+
+.climatology = function(object, index, values, FUN="mean") {
+
+  FUN = match.fun(FUN)
+  dims = dim(object)
+  if(!(length(dims) %in% c(3,4)))
+    stop("climatology computation only supported for arrays of dimension 3 or 4.")
+  ind  = values
+  if(is.numeric(ind)) ind = sort(ind)
+  out = array(NA, dim=c(dims[-length(dims)], length(ind)))
+  for(i in seq_along(ind)) {
+    if(length(dims)==3)
+      out[,,i] = apply(object[,, which(index == ind[i])], 1:2, FUN, na.rm=TRUE)
+    if(length(dims)==4)
+      out[,,,i] = apply(object[,,, which(index == ind[i])], 1:3, FUN, na.rm=TRUE)
+  }
+  dimnames(out)[[length(dims)]] = ind
+  return(out)
+
 }
 
 # Internal functions ------------------------------------------------------

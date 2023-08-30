@@ -81,6 +81,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
 
   time_unit = control$time_unit
   origin = control$origin
+  tcal = control$calendar
 
   dimx = ncvar_dim(nc, varid=varid, value=TRUE)
   dims = sapply(dimx, length)

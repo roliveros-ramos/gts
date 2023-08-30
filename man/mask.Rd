@@ -4,6 +4,7 @@
 \alias{mask}
 \alias{mask.grid}
 \alias{mask.gts}
+\alias{mask.array}
 \alias{mask<-}
 \title{Extract, create or assign ocean/land masks.}
 \usage{
@@ -12,6 +13,8 @@ mask(x, ...)
 \method{mask}{grid}(x, n = 2, thr = 0.8, hires = FALSE, ...)
 
 \method{mask}{gts}(x, n = 2, thr = 0.8, hires = FALSE, ...)
+
+\method{mask}{array}(x, ...)
 
 mask(object, mask, ...) <- value
 }

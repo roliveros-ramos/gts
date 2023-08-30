@@ -30,6 +30,16 @@ mask.gts = function(x, n=2, thr=0.8, hires=FALSE, ...) {
   return(mask(x$grid))
 }
 
+#' @rdname mask
+#' @export
+mask.array = function(x, ...) {
+  x = drop(x)
+  if(length(dim(x))!=3) stop("Automatic mask extraction only for 3D arrays.")
+  out = apply(x, 1:2, FUN = function(x) !all(is.na(x)))
+  out = 0 + out
+  return(out)
+}
+
 #' @param object The object to add or replace the mask.
 #' @param mask A mask.
 #'
@@ -75,9 +85,9 @@ put_mask = function(object, mask, n=2, thr=0.8, hires=FALSE, ...) {
 
 
 setMethod('mask<-', signature(object='gts', mask='matrix'), put_mask)
+setMethod('mask<-', signature(object='gts', mask='array'), put_mask)
 setMethod('mask<-', signature(object='gts', mask='gts'), put_mask)
 setMethod('mask<-', signature(object='gts', mask='grid'), put_mask)
-
 
 
 # Internal ----------------------------------------------------------------

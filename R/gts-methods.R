@@ -49,6 +49,15 @@ Ops.gts = function(e1, e2) {
   }
   if(inherits(e1, "gts") & inherits(e2, "gts")) {
     ok1 = identical(e1$grid, e2$grid)
+
+    if(!is.null(e2$info$climatology)) {
+      if(e2$info$climatology) {
+        if(frequency(e1)==frequency(e2)) {
+          if(length(dim(e1))==3) e2$x = e2$x[, , as.numeric(cycle(e1))]
+          if(length(dim(e1))==4) e2$x = e2$x[, , , as.numeric(cycle(e1))]
+        }
+      }
+    }
     ok2 = identical(dim(e1$x), dim(e2$x))
     if(ok1 & ok2) {
       e1$x = get(.Generic, mode="function")(e1$x, e2$x)
@@ -179,6 +188,7 @@ units.gts = function(x) {
   return(tail(x$info$units, 1))
 }
 
+# generic implemented in base.
 #' @export
 'units<-.gts' = function(x, value) {
 
@@ -195,8 +205,67 @@ units.gts = function(x) {
 #' @export
 str.gts = function(object, ...) {
   class(object) = "list"
-  str(object)
+  str(object, ...)
   return(invisible())
+}
+#' @export
+quantile.gts = function(x, probs = seq(0, 1, 0.25), na.rm = TRUE, names = TRUE,
+                        type = 7, digits = 7, ...) {
+
+  MARGIN = seq_along(dim(x))
+  MARGIN = MARGIN[-length(MARGIN)]
+
+  out = apply(x$x, MARGIN=MARGIN, FUN=quantile, probs=probs, na.rm=na.rm, names=names,
+        type=type, digits=digits, ...)
+
+  lans = length(out)/prod(dim(x)[MARGIN])
+  if(lans>1) out = aperm(out, perm = c(seq_along(dim(out))[-1], 1))
+
+  x$x = out
+  x$time = probs
+  x$breaks$time = .getBreaks(x$time)
+  x$info$time$time = probs
+  x$info$dim$time = probs
+  x$info$ts = NULL
+  x$info$time_var = "prob"
+
+  return(x)
+
+}
+
+#' @export
+melt = function (data, ..., na.rm = FALSE, value.name = "value") {
+  UseMethod("melt", data)
+}
+
+#' @export
+melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
+
+  time_var = data$info$time_var
+  if(is.null(time_var)) time_var = "time"
+
+  if(is.null(data$depth)) {
+    out = data.frame(longitude=data$grid$df$lon, latitude=data$grid$df$lat,
+                     time=rep(data$time, each=nrow(data$grid$df)),
+                     value=as.numeric(data$x))
+
+    names(out)[3:4] = c(time_var, names(data)[1])
+
+  } else {
+
+    out = data.frame(longitude=data$grid$df$lon, latitude=data$grid$df$lat,
+                     depth = rep(data$depth, each=nrow(data$grid$df)))
+    out = data.frame(longitude=out$longitude, latitude=out$latitude,
+                     depth = out$depth,
+                     time=rep(data$time, each=nrow(out)),
+                     value=as.numeric(data$x))
+
+    names(out)[4:5] = c(time_var, names(data)[1])
+
+  }
+
+  return(out)
+
 }
 
 # S4 compatibility --------------------------------------------------------

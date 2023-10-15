@@ -37,47 +37,66 @@ Math2.gts = function(x, ...) {
 
 #' @export
 Ops.gts = function(e1, e2) {
+
+  # One argument Ops
+  if(missing(e2)) {
+    e1$x = get(.Generic, mode="function")(e1$x)
+    return(e1)
+  }
+
+  # For simplicity, just assumme the e1 must be a gts object
+  if(!inherits(e1, "gts") & inherits(e2, "gts")) {
+    return(get(.Generic, mode="function")(e2, e1))
+  }
+
+  # If e2 is not gts, we deal with the case it is a matrix and move on.
   if(inherits(e1, "gts") & !inherits(e2, "gts")) {
     if(identical(dim(e1$x)[1:2], dim(e2))) e2 = as.numeric(e2)
     e1$x = get(.Generic, mode="function")(e1$x, e2)
     return(e1)
   }
-  if(inherits(e2, "gts") & !inherits(e1, "gts")) {
-    if(identical(dim(e2$x)[1:2], dim(e1))) e1 = as.numeric(e1)
-    e2$x = get(.Generic, mode="function")(e1, e2$x)
-    return(e2)
-  }
-  if(inherits(e1, "gts") & inherits(e2, "gts")) {
-    ok1 = identical(e1$grid, e2$grid)
 
-    if(!is.null(e2$info$climatology)) {
-      if(e2$info$climatology) {
-        if(frequency(e1)==frequency(e2)) {
-          if(length(dim(e1))==3) e2$x = e2$x[, , as.numeric(cycle(e1))]
-          if(length(dim(e1))==4) e2$x = e2$x[, , , as.numeric(cycle(e1))]
-        }
-      }
-    }
-    ok2 = identical(dim(e1$x), dim(e2$x))
-    if(ok1 & ok2) {
-      e1$x = get(.Generic, mode="function")(e1$x, e2$x)
-      return(e1)
-    } else {
-      stop(gettextf("Input 'gts' objects dimensions not compatible for '%s'.",
-                    .Generic), domain = NA)
-    }
+  # Now, if both e1 and e2 are gts objects.
+
+  # We must ensure:
+  # - The dimensions are compatible
+  ok0 = length(dim(e1)) == length(dim(e2))
+  if(!ok0) stop(sprintf("Dimensions of both objects are not compatible (%d!=%d).",
+                        length(dim(e1)), length(dim(e2))))
+  # - The grids are the same
+  ok1 = .compare_grids(e1$grid, e2$grid, strict=FALSE)
+  if(!ok1) stop("Grids are not compatible.")
+  # - The time frequency is the same
+  ok2 = identical(frequency(e1),frequency(e2))
+  if(!ok2) stop("Time frequencies are not compatible.")
+  # TO DO: more checks for time consistency.
+
+  # If e1 is a climatology, move it to e2
+  if(is_climatology(e1) & !is_climatology(e2)) {
+    return(get(.Generic, mode="function")(e2, e1))
   }
+  # Now, e1 can be a climatology too. But it doesn't matter, e1 leads.
+  # If e2 is a climatology, we make it match the e1 cycles.
+  if(is_climatology(e2)) {
+    if(length(dim(e2))==3) e2$x = e2$x[, , as.numeric(cycle(e1))]
+    if(length(dim(e2))==4) e2$x = e2$x[, , , as.numeric(cycle(e1))]
+  }
+  # After this, the dimensions of e2 must match e1.
+  ok3 = identical(dim(e1$x), dim(e2$x))
+  if(!ok3) stop(gettextf("Input 'gts' objects dimensions not compatible for '%s'.",
+                         .Generic), domain = NA)
+  # Finally, we make the operation over the arrays.
+  # Currently, we're not checking the time is identical, must do?
+  e1$x = get(.Generic, mode="function")(e1$x, e2$x)
+  # This is not needed, but just in case :)
+  e1$info$climatology = is_climatology(e1) & is_climatology(e2)
+  # and we return e1.
+  return(e1)
+
 }
 
 #' @export
-Summary.gts = function(x, ..., na.rm = TRUE) {
-
-  # is_gts = sapply(..., FUN=is, class2="gts")
-  # if(any(is_gts)) {
-  #   for(i in seq_along(...)) {
-  #     if(is_gts[i]) ...[[i]] = ...[[i]]$x
-  #   }
-  # }
+Summary.gts = function(x, ..., na.rm=TRUE) {
   get(.Generic, mode="function")(x$x, na.rm=na.rm)
 }
 
@@ -157,9 +176,10 @@ c.gts = function(...) {
   x$info$time$time = info_time
   x$breaks$time = .getBreaks(x$info$time$time)
   x$info$dim$time = info_time
-  x$info$ts = ts(seq_along(x$time), start=start(the_ts), freq=frequency(the_ts))
+  x$info$ts = ts(seq_along(x$time), start=start(the_ts), frequency=frequency(the_ts))
 
-  class(x) = c("gts", "ts")
+  # class(x) = c("gts", "ts")
+  class(x) = "gts"
   return(x)
 
 }
@@ -208,6 +228,7 @@ str.gts = function(object, ...) {
   str(object, ...)
   return(invisible())
 }
+
 #' @export
 quantile.gts = function(x, probs = seq(0, 1, 0.25), na.rm = TRUE, names = TRUE,
                         type = 7, digits = 7, ...) {
@@ -268,12 +289,82 @@ melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
 
 }
 
+#' @export
+mean.gts = function(x, by=NULL, trim=0, na.rm=FALSE, ...) {
+  if(is.null(by)) return(mean(as.double(x), trim=trim, na.rm=na.rm, ...))
+  out = apply_gts(x=x, FUN=mean, type=by, trim=trim, na.rm=TRUE, ...)
+  return(out)
+}
+
+#' @export
+sum.gts = function(x, by=NULL, na.rm=FALSE, ...) {
+  if(is.null(by)) return(sum(as.double(x), na.rm=na.rm, ...))
+  out = apply_gts(x=x, FUN=sum, type=by, na.rm=TRUE, ...)
+  return(out)
+}
+
+#' @export
+as.double.gts = function(x, ...) {
+
+  if(!is.null(x$grid$mask)) {
+    return(as.double(x$x[!is.na(x$grid$mask)]))
+  }
+  return(as.double(x$x))
+}
+
+#' @export
+sd = function(x, na.rm, ...) {
+  UseMethod("sd")
+}
+
+#' @export
+sd.default = function(x, na.rm=FALSE, ...) {
+  stats::sd(x=x, na.rm=na.rm)
+}
+
+#' @export
+sd.gts = function(x, by=NULL, na.rm=FALSE, ...) {
+  if(is.null(by)) return(sd(as.double(x), na.rm=na.rm, ...))
+  out = apply_gts(x=x, FUN=sd, type=by, na.rm=TRUE, ...)
+  return(out)
+}
+
+#' @export
+is_climatology = function (x, ...) {
+  UseMethod("is_climatology")
+}
+
+#' @export
+is_climatology.gts = function(x, ...) {
+  return(x$info$climatology)
+}
+
 # S4 compatibility --------------------------------------------------------
 
 setOldClass("gts")
 setOldClass("grid")
 
+
 # setMethod('Ops', signature(e1='gts', e2='ANY'), Ops.gts)
 # setMethod('Arith', signature(e1='ANY', e2='gts'), Arith_gts)
 # setMethod('Arith', signature(e1='gts', e2='ANY'), Ops.gts)
+
+
+# Auxiliar ----------------------------------------------------------------
+
+apply_gts = function(x, FUN, type=c("time", "space"), ...) {
+
+  type = match.arg(type)
+
+  if(type=="time") MARGIN = seq_along(dim(x))[-c(1,2)]
+  if(type=="space") MARGIN = head(seq_along(dim(x)), -1)
+
+  out = apply(x$x, MARGIN=MARGIN, FUN=FUN, ...)
+
+  if(type=="time") {
+    out = ts(out, start=start(x), frequency=frequency(x))
+  }
+  return(out)
+}
+
 

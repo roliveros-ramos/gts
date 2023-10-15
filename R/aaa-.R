@@ -20,7 +20,7 @@ NULL
 NULL
 #' @importFrom colorful divergencePalette
 NULL
-#' @importFrom stats gaussian integrate quantile
+#' @importFrom stats gaussian integrate quantile sd
 NULL
 #' @importFrom maps map
 NULL

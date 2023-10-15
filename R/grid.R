@@ -68,7 +68,8 @@ update_grid = function(grid, thr) {
 #' @export
 #'
 #' @examples read_grid()
-read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
+read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE,
+                     value=FALSE, ...) {
 
   control = list(...)
 
@@ -82,7 +83,17 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
   if(is.null(varid)) {
     varid = names(nc$var)
     ndims = sapply(nc$var, FUN="[[", i="ndims")
-    ind   = which(ndims>=2)
+    # exclude latitude and longitude
+    ind_lon = grep(x=varid, pattern="^lon", ignore.case=TRUE)
+    ind_lat = grep(x=varid, pattern="^lat", ignore.case=TRUE)
+    ind_exc = c(ind_lon, ind_lat)
+    varid = varid[-ind_exc]
+    ndims = ndims[-ind_exc]
+    # first checks for arrays of dim 3 or more.
+    ind   = which(ndims>2)
+    # If none is found, check for dim 2. Sometimes file has just one layer...
+    if(length(ind)==0) ind = which(ndims>=2)
+    # If nothing found, throw an error
     if(length(ind)==0) stop("No suitable variables found in file.")
     if(length(ind)!=1) {
       ind = ind[1]
@@ -198,7 +209,6 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
               df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
   class(grid) =  c("grid", class(grid))
 
-
   grid = fill(grid, control=list(create_psi=.is_regular_grid(grid)))
   grid$area = suppressMessages(area(grid))
 
@@ -234,6 +244,8 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE, ...) {
 
   # info to write_ncdf.grid
   grid$info = .grid_info(grid)
+
+  if(isTRUE(value)) return(list(x=x, grid=grid))
 
   return(grid)
 
@@ -472,4 +484,15 @@ interp_grid = function(grid) {
 
   return(is_regular)
 
+}
+
+.compare_grids = function(e1, e2, strict=TRUE) {
+  if(isTRUE(strict)) return(identical(e1, e2))
+  e1$mask = e2$mask = NULL
+  e1$area = e2$area = NULL
+  e1$rho = e2$rho = NULL
+  e1$psi = e2$psi = NULL
+  e1$df = e2$df = NULL
+  e1$info = e2$info = NULL
+  return(identical(e1, e2))
 }

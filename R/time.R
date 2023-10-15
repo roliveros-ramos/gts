@@ -10,6 +10,11 @@ frequency.gts = function(x, ...) {
 }
 
 #' @export
+deltat.gts = function(x, ...) {
+  deltat(x$info$ts)
+}
+
+#' @export
 start.gts = function(x, ...) {
   start(x$info$ts)
 }
@@ -56,7 +61,7 @@ climatology.gts = function(x, FUN="mean", ...) {
   x$breaks$time = .getBreaks(x$time)
   x$info$time$time = tapply(x$info$time$time, INDEX = cycle(x), FUN="mean")
   x$info$dim$time = values
-  x$info$ts = ts(values, frequency = frequency(x))
+  x$info$ts = ts(values, start=0, frequency=frequency(x))
   x$info$climatology = TRUE
 
   return(x)
@@ -201,6 +206,7 @@ time2date = function(x, units="seconds", origin="1970-01-01", calendar=NULL) {
     if(units=="year") {
       xnt = do.call(period, args=setNames(list(floor(x)), nm=units))
       xtime = origin + xnt
+      if(is.null(calendar)) calendar = 365 + leap_year(xtime)
       xx = (x%%1)*calendar*24*60*60
       new_time = xtime + seconds(xx)
     }

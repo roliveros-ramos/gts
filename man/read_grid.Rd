@@ -4,7 +4,14 @@
 \alias{read_grid}
 \title{Read the grid from a file}
 \usage{
-read_grid(filename, varid = NULL, mask = NULL, create_mask = FALSE, ...)
+read_grid(
+  filename,
+  varid = NULL,
+  mask = NULL,
+  create_mask = FALSE,
+  value = FALSE,
+  ...
+)
 }
 \arguments{
 \item{filename}{The filename of the netCDF file.}

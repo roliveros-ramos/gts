@@ -10,13 +10,13 @@
 \usage{
 mask(x, ...)
 
-\method{mask}{grid}(x, n = 2, thr = 0.8, hires = FALSE, ...)
+\method{mask}{grid}(x, n = 2, thr = 0.8, hires = FALSE, ocean = TRUE, ...)
 
-\method{mask}{gts}(x, n = 2, thr = 0.8, hires = FALSE, ...)
+\method{mask}{gts}(x, n = 2, thr = 0.8, hires = FALSE, ocean = TRUE, ...)
 
 \method{mask}{array}(x, ...)
 
-mask(object, mask, ...) <- value
+mask(x) <- value
 }
 \arguments{
 \item{x}{An object containing a mask.}
@@ -28,6 +28,8 @@ mask(object, mask, ...) <- value
 \item{thr}{Threshold to assign a point to the ocean.}
 
 \item{hires}{Boolean, use high-resolution coastline?}
+
+\item{ocean}{Boolean, are valid points in the ocean? Default is TRUE. FALSE for land.}
 
 \item{object}{The object to add or replace the mask.}
 

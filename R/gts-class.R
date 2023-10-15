@@ -42,10 +42,11 @@ gts = function(x, ...) {
 
 #' @rdname gts
 #' @export
-gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
+gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
 
   nc = x
 
+  # find the variable to read
   if(is.null(varid)) {
     varid = names(nc$var)
     ndims = sapply(nc$var, FUN="[[", i="ndims")
@@ -68,6 +69,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     message(sprintf("Reading variable '%s'.", varid))
   }
 
+  # get global attributes, units and long_name
   gatt = ncatt_get(nc, varid=0)
 
   tmp = ncatt_get(nc, varid=varid, attname = "units")
@@ -76,13 +78,16 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   tmp = ncatt_get(nc, varid=varid, attname = "long_name")
   long_name = if(tmp$hasatt) tmp$value else varid
 
+  # get dimensions, including depth
   ndimx = nc$var[[varid]]$varsize
   hasdepth = if(length(ndimx)==4) TRUE else FALSE
 
+  # get time information
   time_unit = control$time_unit
   origin = control$origin
   tcal = control$calendar
 
+  # get dimensions information
   dimx = ncvar_dim(nc, varid=varid, value=TRUE)
   dims = sapply(dimx, length)
   time = tail(names(dimx), 1)
@@ -90,9 +95,11 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   if(length(dimx)<3) stop("At least (lon, lat, time) array is needed.")
   if(length(dimx)>4) stop("More than 4-dimensions are not supported.")
 
+  # check for monotonicity in dimensions
   is_monot = all(sapply(dimx, FUN=is_monotonic))
   if(!is_monot) stop("Variable dimensions have non-monotonic values.")
 
+  # get the data
   x = ncvar_get(nc, varid=varid, collapse_degen = FALSE)
 
   ## validation of dimensions
@@ -125,8 +132,9 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     ind = rev(seq_along(dimx[[time]]))
     x = if(hasdepth) x[, , , ind, drop=FALSE] else x[, , ind, drop=FALSE]
   }
-  ##
+  ## END validation of dimensions
 
+  # try to guess time unit and origin
   if(is.null(time_unit)) {
     tmp = ncatt_get(nc, varid=time, attname = "units")
     tunit = if(tmp$hasatt) tmp$value else NULL
@@ -155,6 +163,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     }
   }
 
+  # get depth information
   depth_conf = list(depth_unit = NULL, depth=NULL)
   depth_name = NULL
   if(hasdepth) {
@@ -164,22 +173,30 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
     depth_name = "depth"
   }
 
+  # if no origin, ask and throw an error
   if(is.null(origin)) stop("You must especify time origin.")
 
   time_conf = list(time_unit=time_unit, origin=origin, time=dimx[[time]],
                    units = sprintf("%s since %s", time_unit, origin),
                    calendar=tcal)
 
+  # compute breaks
   breaks = lapply(dimx, FUN=.getBreaks)
 
+  # create time
   new_time = time2date(dimx[[time]], units=time_conf$time_unit,
                        origin=time_conf$origin, calendar=time_conf$calendar)
-
   tt = get_time(new_time[1])
-  ff = get_freq(new_time, freq=control$freq)
+  ff = get_freq(new_time, freq=control$frequency)
   myts = ts(seq_along(new_time), start=c(year(new_time[1]),
-                                         floor((tt%%1)*ff) + 1), freq=ff)
+                                         floor((tt%%1)*ff) + 1), frequency=ff)
 
+  if(isTRUE(climatology) & (length(new_time)!=ff)) {
+    warning("Data is not climatological.")
+    climatology = FALSE
+  }
+
+  # get longitude and latitude
   ilat = grep(x=tolower(names(nc$var)), pattern="^lat")
   ilon = grep(x=tolower(names(nc$var)), pattern="^lon")
 
@@ -230,7 +247,9 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
   }
 
   dimnames(LON) = dimnames(LAT) = list(x=nlon, y=nlat)
+  # END get longitude and latitude
 
+  # variables and units
   odim = if(hasdepth) list(nlon, nlat, dimx[[3]], dimx[[time]]) else
     list(nlon, nlat, dimx[[time]])
   names(odim) = c(lon_name, lat_name, depth_name, "time")
@@ -243,6 +262,7 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
 
   units = c(lon_unit, lat_unit, var_unit)
 
+  # create grid
   grid = list(longitude=longitude, latitude=latitude, rho=list(LON=LON, LAT=LAT),
               psi=list(LON=pLON, LAT=pLAT), LON=LON, LAT=LAT, area=NULL, mask=NULL,
               df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
@@ -250,7 +270,9 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
 
   grid = fill(grid, control=control)
   grid$area = suppressMessages(area(grid))
+  # END: create grid
 
+  # constructor
   output = list(x = x,
                 longitude = longitude,
                 latitude  = latitude,
@@ -261,10 +283,169 @@ gts.ncdf4 = function(x, varid=NULL, control=list(), ...) {
                 info      = list(varid=varid, long_name=long_name,
                                  time=time_conf, depth=depth_conf,
                                  dim = odim, var=ovar, dim.units=dim.units,
-                                 units=units, ovarid=ovarid, global=gatt, ts=myts))
+                                 units=units, ovarid=ovarid, global=gatt, ts=myts,
+                                 climatology=climatology))
 
-  class(output) = c("gts", "ts")
+  class(output) = "gts"
 
   return(output)
 
 }
+
+
+
+#' @rdname gts
+#' @export
+gts.array = function(x, varid=NULL, grid, data = NA, start = 1, end=numeric(),
+                     frequency = 1, deltat = 1, climatology=FALSE, long_name=NULL, unit=NULL, control=list(), ...) {
+
+  if(is.null(varid)) varid = ""
+  if(is.null(long_name)) long_name = ""
+  var_unit = if(is.null(unit))  "" else unit
+
+  x = drop(x)
+  ntime = ndata = tail(dim(x), 1)
+
+  if(isTRUE(climatology)) {
+    frequency = tail(dim(x), 1)
+    start = 0
+  }
+
+  if(missing(frequency)) {
+    frequency = 1/deltat
+  } else {
+    if(missing(deltat)) deltat = 1/frequency
+  }
+
+  if(!missing(start)) start = as.numeric(start)
+  if (length(start) > 1L) {
+    start = start[1L] + (start[2L] - 1)/frequency
+  }
+  if(!missing(end)) end = as.numeric(end)
+  if(length(end) > 1L) {
+    end = end[1L] + (end[2L] - 1)/frequency
+  }
+  if(missing(end)) {
+    end = start + (ndata - 1)/frequency
+  } else {
+    if(missing(start)) start = end - (ndata - 1)/frequency
+  }
+
+  if(inherits(grid, "gts")) grid = grid$grid
+  if(!inherits(grid, "grid")) stop("grid must be of class 'grid'.")
+
+  ndimx = dims = dim(x)
+
+  if(length(ndimx)<3) stop("At least (lon, lat, time) array is needed.")
+  if(length(ndimx)>4) stop("More than 4-dimensions are not supported.")
+
+  dimx = lapply(dimnames(x), as.numeric)
+  if(length(dimx)==0) dimx = lapply(dim(x), seq_len)
+
+  hasdepth = if(length(ndimx)==4) TRUE else FALSE
+
+  # get depth information
+  depth_conf = list(depth_unit = NULL, depth=NULL)
+  depth_name = NULL
+  if(hasdepth) {
+    dunit = ifelse(is.null(control$depth_unit), "", control$depth_unit)
+    depth_conf = list(depth_unit=dunit, depth=dimx[[3]])
+    depth_name = "depth"
+  }
+
+  # check grid is appropiate
+
+  # compute breaks
+  breaks = lapply(dimx, FUN=.getBreaks)
+
+  # create time
+  origin = "0000-01-01 12:00:00.5"
+  time_unit = "year"
+  myts = ts(seq_len(ntime), start=start, end=end, frequency=frequency, deltat=deltat, ...)
+  tt = time(myts)
+  new_time = time2date(tt, units=time_unit, origin=origin)
+
+  time_conf = list(time_unit="year", origin=origin, time=tt,
+                   units = sprintf("%s since %s", time_unit, origin),
+                   calendar=NULL)
+
+  time = length(ndimx)
+
+  longitude = grid$longitude
+  latitude  = grid$latitude
+
+  if(length(dim(longitude))<2) {
+    nlon = longitude
+    lon_name = "longitude"
+    lon_var = NULL
+    dlon_unit = "degrees East"
+    lon_unit = NULL
+  } else {
+    nlon = seq_len(dims[1])
+    lon_name = "i"
+    lon_var = "longitude"
+    dlon_unit = ""
+    lon_unit = "degrees East"
+  }
+
+  if(length(dim(latitude))<2) {
+    nlat = latitude
+    lat_name = "latitude"
+    lat_var = NULL
+    dlat_unit = "degrees North"
+    lat_unit = NULL
+  } else {
+    nlat = seq_len(dims[2])
+    lat_name = "j"
+    lat_var = "latitude"
+    dlat_unit = ""
+    lat_unit = "degrees North"
+  }
+
+  # compute breaks
+  dimx[[1]] = nlon
+  dimx[[2]] = nlat
+  dimx[[time]] = tt
+
+  breaks = lapply(dimx, FUN=.getBreaks)
+
+  # variables and units
+  odim = if(hasdepth) list(nlon, nlat, dimx[[3]], dimx[[time]]) else
+    list(nlon, nlat, dimx[[time]])
+  names(odim) = c(lon_name, lat_name, depth_name, "time")
+
+  ovar = c(lon_var, lat_var, "x")
+  ovarid = c(lon_var, lat_var, varid)
+
+  dim.units = c(dlon_unit, dlat_unit, depth_conf$depth_unit, time_conf$units)
+  names(dim.units) = c(lon_name, lat_name, depth_name, "time")
+
+  units = c(lon_unit, lat_unit, var_unit)
+
+  # constructor
+  output = list(x = x,
+                longitude = grid$longitude,
+                latitude  = grid$latitude,
+                depth     = if(hasdepth) dimx[[3]] else NULL,
+                time      = new_time,
+                breaks    = breaks,
+                grid      = grid,
+                info      = list(varid=varid, long_name=long_name,
+                                 time=time_conf, depth=depth_conf,
+                                 dim = odim, var=ovar, dim.units=dim.units,
+                                 units=units, ovarid=ovarid, global=NULL, ts=myts,
+                                 climatology=climatology))
+
+  class(output) = "gts"
+
+  return(output)
+
+}
+
+
+
+
+
+
+
+

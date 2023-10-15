@@ -1,17 +1,4 @@
 
-
-#' @export
-latitude = function(x, ...) {
-  UseMethod("longitude")
-}
-
-#' @export
-latitude.gts = function(x, prime_meridian=NULL) {
-  lat = x$latitude
-  return(latitude)
-}
-
-
 #' @export
 longitude = function(x, ...) {
   UseMethod("longitude")
@@ -28,14 +15,25 @@ longitude.gts = function(x, prime_meridian=NULL) {
   return(lon)
 }
 
+#' @export
+latitude = function(x, ...) {
+  UseMethod("longitude")
+}
 
 #' @export
-'longitude<-' = function(x, value, ...) {
+latitude.gts = function(x, prime_meridian=NULL) {
+  lat = x$latitude
+  return(latitude)
+}
+
+
+#' @export
+'longitude<-' = function(x, value) {
   UseMethod('longitude<-')
 }
 
 #' @export
-'longitude<-.gts' = function(x, value, ...) {
+'longitude<-.gts' = function(x, value) {
 
   if(is.matrix(x$longitude)) stop("longitude modification is only implemented for regular grids.")
 

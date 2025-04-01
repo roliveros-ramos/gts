@@ -54,7 +54,7 @@ climatology.gts = function(x, FUN="mean", ...) {
   index = as.numeric(cycle(x))
   values = seq_len(frequency(x))
 
-  clim = .climatology(x$x, index=index, values=values, FUN=FUN)
+  clim = .climatology(x$x, index=index, values=values, FUN=FUN, ...)
 
   x$x = clim
   x$time = values
@@ -150,7 +150,7 @@ guess_origin = function(time, nyear_max=100) {
   return(guess)
 }
 
-.climatology = function(object, index, values, FUN="mean") {
+.climatology = function(object, index, values, FUN="mean", ...) {
 
   FUN = match.fun(FUN)
   dims = dim(object)
@@ -161,9 +161,9 @@ guess_origin = function(time, nyear_max=100) {
   out = array(NA, dim=c(dims[-length(dims)], length(ind)))
   for(i in seq_along(ind)) {
     if(length(dims)==3)
-      out[,,i] = apply(object[,, which(index == ind[i])], 1:2, FUN, na.rm=TRUE)
+      out[,,i] = apply(object[,, which(index == ind[i])], 1:2, FUN, na.rm=TRUE, ...)
     if(length(dims)==4)
-      out[,,,i] = apply(object[,,, which(index == ind[i])], 1:3, FUN, na.rm=TRUE)
+      out[,,,i] = apply(object[,,, which(index == ind[i])], 1:3, FUN, na.rm=TRUE, ...)
   }
   dimnames(out)[[length(dims)]] = ind
   return(out)
@@ -214,6 +214,12 @@ time2date = function(x, units="seconds", origin="1970-01-01", calendar=NULL) {
       xnt = do.call(period, args=setNames(list(floor(x)), nm=units))
       xtime = origin + xnt
       xx = (x%%1)*7*24*60*60
+      new_time = xtime + seconds(xx)
+    }
+    if(units=="fortnight") {
+      xnt = do.call(period, args=setNames(list(floor(14*x)), nm="day"))
+      xtime = origin + xnt
+      xx = (x%%1)*24*60*60
       new_time = xtime + seconds(xx)
     }
     if(units=="day") {

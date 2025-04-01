@@ -23,7 +23,7 @@ latitude = function(x, ...) {
 #' @export
 latitude.gts = function(x, prime_meridian=NULL) {
   lat = x$latitude
-  return(latitude)
+  return(lat)
 }
 
 

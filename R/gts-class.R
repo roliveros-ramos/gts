@@ -57,11 +57,11 @@ gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
       if(!is.null(control$use_first)) {
         ind = ind[1]
         if(!isTRUE(control$use_first)) {
-          message("Variables found in file:", vs)
+          message("Variables found in file: ", vs)
           stop("More than one variable in the file, must specify 'varid'.")
         }
       } else {
-        message("Variables found in file:", vs)
+        message("Variables found in file: ", vs)
         stop("More than one variable in the file, must specify 'varid'.")
       }
     }
@@ -139,7 +139,7 @@ gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
     tmp = ncatt_get(nc, varid=time, attname = "units")
     tunit = if(tmp$hasatt) tmp$value else NULL
     if(is.null(tunit)) stop("You must especify time unit.")
-    punits = c("second", "minute", "hour", "day", "week", "month", "year")
+    punits = c("second", "minute", "hour", "day", "week", "fortnight", "month", "year")
     time_unit = punits[sapply(punits, FUN=grepl, x=tunit)]
     if(length(time_unit)==0) {
       message(sprintf("Time units '%s' are not recognized.", tunit))
@@ -303,7 +303,8 @@ gts.array = function(x, varid=NULL, grid, data = NA, start = 1, end=numeric(),
   if(is.null(long_name)) long_name = ""
   var_unit = if(is.null(unit))  "" else unit
 
-  x = drop(x)
+  if(length(dim(x))>3) x = drop(x)
+
   ntime = ndata = tail(dim(x), 1)
 
   if(isTRUE(climatology)) {

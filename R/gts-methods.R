@@ -78,8 +78,8 @@ Ops.gts = function(e1, e2) {
   # Now, e1 can be a climatology too. But it doesn't matter, e1 leads.
   # If e2 is a climatology, we make it match the e1 cycles.
   if(is_climatology(e2)) {
-    if(length(dim(e2))==3) e2$x = e2$x[, , as.numeric(cycle(e1))]
-    if(length(dim(e2))==4) e2$x = e2$x[, , , as.numeric(cycle(e1))]
+    if(length(dim(e2))==3) e2$x = e2$x[, , as.numeric(cycle(e1)), drop=FALSE]
+    if(length(dim(e2))==4) e2$x = e2$x[, , , as.numeric(cycle(e1)), drop=FALSE]
   }
   # After this, the dimensions of e2 must match e1.
   ok3 = identical(dim(e1$x), dim(e2$x))

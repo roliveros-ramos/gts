@@ -16,6 +16,18 @@
 #' plot(grid)
 make_grid = function(lon, lat, dx, dy=dx, n=1, thr=0.8, hires=FALSE, mask=TRUE) {
 
+  if(length(lon)>2 & missing(dx)) {
+    dlon = diff(lon)
+    check = all((unique(dlon) - median(dlon)) < 1e-6)
+    dx = median(dlon)
+  }
+
+  if(length(lat)>2 & missing(dy)) {
+    dlat = diff(lat)
+    check = all((unique(dlat) - median(dlat)) < 1e-6)
+    dy = median(dlat)
+  }
+
   lon = range(lon, na.rm=TRUE)
   lat = range(lat, na.rm=TRUE)
 
@@ -255,7 +267,10 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE,
 
 #' @exportS3Method plot grid
 plot.grid = function(x, land.col="darkolivegreen4", sea.col="aliceblue", prob=FALSE,
-                     boundaries.col="black", grid=TRUE, grid.lwd=1, grid.col="lightgray", lwd=2, ...) {
+                     boundaries.col="black", grid=TRUE, grid.lwd=1, grid.col="lightgray",
+                     hires=FALSE, lwd=2, ...) {
+
+  is_regular = .is_regular_grid(x)
 
   if(is.null(x$mask)) {
     z = x$LAT
@@ -275,7 +290,15 @@ plot.grid = function(x, land.col="darkolivegreen4", sea.col="aliceblue", prob=FA
 
   hires = if(!is.null(x$hires)) x$hires else FALSE
 
-  image.map(x$LON, x$LAT, z, land=FALSE, legend=prob, zlim=zlim,
+  if(is_regular) {
+    lon = x$LON[, 1]
+    lat = x$LAT[1, ]
+  } else {
+    lon = x$LON
+    lat = x$LAT
+  }
+
+  image.map(lon, lat, z, land=FALSE, legend=prob, zlim=zlim, hires=hires,
             col=col, grid=grid, grid.lwd=grid.lwd, grid.col=grid.col)
   map_details(fill=FALSE, col=boundaries.col, lwd=lwd, hires=hires, ...)
   return(invisible(NULL))

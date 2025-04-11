@@ -76,3 +76,27 @@ latitude.gts = function(x, prime_meridian=NULL) {
 }
 
 
+# Auxiliar functions ------------------------------------------------------
+
+#' Transform coordinates between Coordinate Reference Systems (CRS)
+#'
+#' @param object A two-column matrix with 'x' (~longitude) and 'y' (~latitude) coordinates as columns.
+#' @param crs_old Original CRS of the coordinates.
+#' @param crs_new New CRS of the output.
+#'
+#' @returns A data.frame with 'x' and 'y' coordinates in the new CRS.
+#' @export
+#'
+transform_coordinates = function(object, crs_old, crs_new="EPSG:4326") {
+  x = object[, 1]
+  y = object[, 2]
+  .createPoint = function(i) st_point(c(x[i], y[i]))
+  points = lapply(seq_along(x), FUN=.createPoint)
+  points$crs = crs_old
+  coords = do.call(st_sfc, points)
+  dcoords = st_transform(coords, crs_new)
+  newcoords = data.frame(x=sapply(dcoords, FUN="[", i=1),
+                         y=sapply(dcoords, FUN="[", i=2))
+  return(newcoords)
+}
+

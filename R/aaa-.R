@@ -18,6 +18,8 @@ NULL
 NULL
 #' @importFrom sp SpatialPoints over CRS proj4string
 NULL
+#' @importFrom sf st_sfc st_transform st_point
+NULL
 #' @importFrom colorful divergencePalette
 NULL
 #' @importFrom stats gaussian integrate quantile sd

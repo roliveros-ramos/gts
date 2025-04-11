@@ -1,7 +1,7 @@
 Package: gts
 Type: Package
 Title: Gridded Time-Series
-Version: 0.1.9003
+Version: 0.1.9004
 Author: Ricardo Oliveros-Ramos
 Maintainer: Ricardo Oliveros-Ramos <ricardo.oliveros@gmail.com>
 Description: Management of gridded time-series (arrays with a time dimension),
@@ -19,7 +19,8 @@ Imports: akima,
          ncdf4,
          nctools,
          sp,
+         sf,
          stats
 Encoding: UTF-8
 LazyData: TRUE
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2

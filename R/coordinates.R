@@ -17,7 +17,7 @@ longitude.gts = function(x, prime_meridian=NULL) {
 
 #' @export
 latitude = function(x, ...) {
-  UseMethod("longitude")
+  UseMethod("latitude")
 }
 
 #' @export

@@ -352,12 +352,14 @@ setOldClass("grid")
 
 # Auxiliar ----------------------------------------------------------------
 
-apply_gts = function(x, FUN, type=c("time", "space"), ...) {
+apply_gts = function(x, FUN, type=c("time", "space", "latitude", "longitude"), ...) {
 
   type = match.arg(type)
 
   if(type=="time") MARGIN = seq_along(dim(x))[-c(1,2)]
   if(type=="space") MARGIN = head(seq_along(dim(x)), -1)
+  if(type=="latitude") MARGIN = seq_along(dim(x))[-1]
+  if(type=="longitude") MARGIN = seq_along(dim(x))[-2]
 
   out = apply(x$x, MARGIN=MARGIN, FUN=FUN, ...)
 

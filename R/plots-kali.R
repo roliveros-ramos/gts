@@ -1,5 +1,30 @@
 
-image.map = function (lon, lat, z, zlim=NULL, center=0, legend=TRUE, hires=FALSE, add = FALSE, nlevel = 1000, horizontal = FALSE,
+#' Draw an image plot with geographical coordinates and coastlines.
+#'
+#' @param lon x-axis coordinates, assumed to be longitude (degrees)
+#' @param lat y-axis coordinates, assumed to be latitude (degrees)
+#' @param z A matrix of dimension [lon x lat]
+#' @param zlim numeric vector of length 2, giving the z matrix plotted range.
+#' @param legend Boolean, add color legend? FALSE can be used to construct multiple plots with a common legend.
+#' @param hires Boolean, use high resolution coastline?
+#' @param slice If z is an 3D array, slice indicates which layer will be used.
+#' @param col Color table to use for image, by default rev(rainbow(nlevel/10, start = 0/6, end = 4/6))
+#' @param axes Boolean, add axes to the plot? Default is TRUE.
+#' @param land Boolean, add a polygon over the land? If FALSE, only coastline is added.
+#' @param land.col Color of the land, if land is TRUE.
+#' @param labels Boolean, add LATITUDE and LONGITUDE labels?
+#' @param sea.col Color of the water bodies.
+#' @param boundaries.col Color of the country boundaries.
+#' @param grid Boolean, add grid lines over the map?
+#' @param grid.col Color of the grid.
+#' @param grid.lwd Width of the grid lines.
+#' @param ... Additional parameters passed to plot methods.
+#'
+#' @returns
+#' @export
+#' @inheritParams fields::image.plot
+#' @examples
+image.map = function (lon, lat, z, zlim=NULL, legend=TRUE, hires=FALSE, add = FALSE, nlevel = 1000, horizontal = FALSE,
                       legend.shrink = 0.9, legend.width = 1.2, slice=NULL,
                       legend.mar = ifelse(horizontal, 3.1, 5.1), legend.lab = NULL, graphics.reset = FALSE,
                       bigplot = NULL, smallplot = NULL, legend.only = FALSE,
@@ -28,7 +53,7 @@ image.map = function (lon, lat, z, zlim=NULL, center=0, legend=TRUE, hires=FALSE
   pm = .findPrimeMeridian(lon)
 
   if(!isTRUE(legend)) {
-    .image.mapnl(lon=lon, lat=lat, z=z, zlim=zlim, center=center, hires=hires, add=add, nlevel=nlevel,
+    .image.mapnl(lon=lon, lat=lat, z=z, zlim=zlim, hires=hires, add=add, nlevel=nlevel,
                  col=col, land=land, land.col=land.col, sea.col=sea.col, boundaries.col=boundaries.col,
                  grid.col=grid.col, grid=grid, axes=axes, border=border, labels=labels, grid.lwd=grid.lwd, ...)
     return(invisible())
@@ -56,14 +81,14 @@ image.map = function (lon, lat, z, zlim=NULL, center=0, legend=TRUE, hires=FALSE
     }
     if (!info$poly.grid) {
       image(x=lon, y=lat, z=z, add = add, col = col, axes=FALSE,
-            xlab="", ylab="", zlim=zlim, ...)
+            xlab="", ylab="", zlim=zlim, xaxs="i", yaxs="i", ...)
       map_details(primeMeridian=pm, hires=hires,col=land.col, interior=FALSE,
                   axes=axes, border=border, boundaries.col=boundaries.col, nx=nx, ny=ny,
                   grid=grid, grid.col=grid.col, water=sea.col, land=land, grid.lwd=grid.lwd, labels=labels)
     }
     else {
       poly.image(x=lon, y=lat, z=z, add = add, col = col, midpoint = midpoint,
-                 border = NA, lwd.poly = lwd, axes=FALSE, zlim=zlim,
+                 border = NA, lwd.poly = lwd, axes=FALSE, zlim=zlim, xaxs="i", yaxs="i",
                  xlab="", ylab="",...)
       map_details(primeMeridian=pm, hires=hires,col=land.col, interior=FALSE,
                   axes=axes, border=border, boundaries.col=boundaries.col, nx=nx, ny=ny,
@@ -141,33 +166,20 @@ image.map = function (lon, lat, z, zlim=NULL, center=0, legend=TRUE, hires=FALSE
 }
 
 
-
-.image.mapnl = function(lon, lat, z, zlim, center=0, hires=FALSE, add = FALSE, nlevel=1000,
-                        col = rev(rainbow(nlevel/10, start = 0/6, end = 4/6)), land=TRUE,
-                        land.col="darkolivegreen4", sea.col="aliceblue", boundaries.col = "black",
-                        grid.col="white", grid.lwd=0.5, grid=FALSE, axes=TRUE, border=!axes, labels=TRUE, ...) {
-
-  pm = .findPrimeMeridian(as.numeric(lon))
-
-  if(is.matrix(lon) & is.matrix(lat)) {
-    poly.image(x=lon, y=lat, z=z, zlim=zlim, col=col, axes=FALSE, add=add, xlab="", ylab="", ...)
-    map_details(primeMeridian=pm, hires=hires,col=land.col, interior=FALSE,
-                axes=axes, border=border, boundaries.col=boundaries.col, nx=nrow(z), ny=ncol(z),
-                grid=FALSE, grid.col=grid.col, grid.lwd=grid.lwd, water=sea.col, land=land, labels=labels)
-  } else {
-    image(x=lon, y=lat, z=z, zlim=zlim, col=col, axes=FALSE, add=add, xlab="", ylab="", ...)
-    map_details(primeMeridian=pm, hires=hires,col=land.col, interior=FALSE,
-                axes=axes, border=border, boundaries.col=boundaries.col, nx=nrow(z), ny=ncol(z),
-                grid=grid, grid.col=grid.col, grid.lwd=grid.lwd, water=sea.col, land=land, labels=labels)
-
-  }
-
-
-
-
-  return(invisible())
-}
-
+#' Add details to a map
+#'
+#' @param primeMeridian Prime Meridian used in the map, possible values are "center" and "left", the former is the default.
+#' @param water Color of the water masses.
+#' @param countries Boolean, do add country boundaries? Default is FALSE.
+#' @param ...
+#'
+#' @returns
+#' @export
+#' @inheritParams image.map
+#' @inheritParams map_details
+#' @inheritParams graphics::grid
+#' @inheritParams maps::map
+#' @examples
 map_details = function(primeMeridian="center", hires=FALSE, col="darkolivegreen4",
                        interior=FALSE, axes=FALSE, border=FALSE, boundaries.col="black",
                        grid=FALSE, grid.col="white", grid.lwd=0.5, cex.axis=0.75, fill=TRUE,
@@ -229,6 +241,15 @@ map_details = function(primeMeridian="center", hires=FALSE, col="darkolivegreen4
   return(invisible())
 }
 
+#' Add geographical axes to a map
+#'
+#' @param sides Side of the axis, 1 and 2 by default. See \code{graphics::axis}.
+#' @param cex.axis Character expansion factor for axis labels.
+#'
+#' @returns
+#' @export
+#' @inheritParams graphics::axis
+#' @examples
 map.axes2 = function(sides=c(1,2), cex.axis=0.75, line=-0.4) {
 
   .axis.map(sides[1], "lon", las=1, cex.axis=cex.axis, line=line, tick=FALSE)
@@ -241,6 +262,34 @@ map.axes2 = function(sides=c(1,2), cex.axis=0.75, line=-0.4) {
 
   return(invisible(NULL))
 }
+
+
+# Auxiliar functions ------------------------------------------------------
+
+
+.image.mapnl = function(lon, lat, z, zlim, hires=FALSE, add = FALSE, nlevel=1000,
+                        col = rev(rainbow(nlevel/10, start = 0/6, end = 4/6)), land=TRUE,
+                        land.col="darkolivegreen4", sea.col="aliceblue", boundaries.col = "black",
+                        grid.col="white", grid.lwd=0.5, grid=FALSE, axes=TRUE, border=!axes, labels=TRUE, ...) {
+
+  pm = .findPrimeMeridian(as.numeric(lon))
+
+  if(is.matrix(lon) & is.matrix(lat)) {
+    poly.image(x=lon, y=lat, z=z, zlim=zlim, col=col, axes=FALSE, add=add, xlab="", ylab="", xaxs="i", yaxs="i", ...)
+    map_details(primeMeridian=pm, hires=hires,col=land.col, interior=FALSE,
+                axes=axes, border=border, boundaries.col=boundaries.col, nx=nrow(z), ny=ncol(z),
+                grid=FALSE, grid.col=grid.col, grid.lwd=grid.lwd, water=sea.col, land=land, labels=labels)
+  } else {
+    image(x=lon, y=lat, z=z, zlim=zlim, col=col, axes=FALSE, add=add, xlab="", ylab="", xaxs="i", yaxs="i", ...)
+    map_details(primeMeridian=pm, hires=hires,col=land.col, interior=FALSE,
+                axes=axes, border=border, boundaries.col=boundaries.col, nx=nrow(z), ny=ncol(z),
+                grid=grid, grid.col=grid.col, grid.lwd=grid.lwd, water=sea.col, land=land, labels=labels)
+
+  }
+
+  return(invisible())
+}
+
 
 .axis.map = function(side, type, usr=NULL, n=5, ...) {
 

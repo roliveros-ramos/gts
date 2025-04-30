@@ -51,7 +51,7 @@ interpolate = function(x, y, z, ...) {
   if(input$hasNA) {
     if(nrow(input$data) < 3) {
       out = list(x=xout, y=yout, z=NA*xout)
-      if(use_link) out$z = trans$linkinv(out$z)
+      # if(use_link) out$z = trans$linkinv(out$z)
       warning("Not enough data points to interpolate, returning NAs.")
       return(out)
     }
@@ -63,7 +63,9 @@ interpolate = function(x, y, z, ...) {
   out = try(FUN(x, y, z, xout, yout, method, extrap, control, ...))
 
   if(inherits(out, "try-error")) {
-    print("error")
+    out = list(x=xout, y=yout, z=NA*xout)
+    warning(out)
+    return(out)
   }
 
   if(output$case["is_gridI"]) {
@@ -74,7 +76,6 @@ interpolate = function(x, y, z, ...) {
 
   if(use_link) out$z = trans$linkinv(out$z)
 
-  # print(dim(out$z))
   return(out)
 
 }
@@ -94,31 +95,23 @@ interpolate.default = .interpolate
 
 # bilinear interpolation
 .bilinear_rr = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
-
   .akima_rr(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
-
 }
 
 .bilinear_ri = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
-
   .akima_ri(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
-
 }
 
 .bilinear_ir = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
-
   .akima_ir(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
-
 }
 
 .bilinear_ii = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
-
   .akima_ii(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
-
 }
 
 
@@ -127,7 +120,7 @@ interpolate.default = .interpolate
 
   # method = c("linear", "akima")
   # bilinear does not extrapolate (put 0s)
-  # bicubic does extrapolate. Could be desactivated (add it).
+  # bicubic does extrapolate. Could be deactivated (add it).
 
   dat = expand.grid(xout=xout, yout=yout)
 
@@ -213,6 +206,49 @@ interpolate.default = .interpolate
 
   return(out)
 
+}
+
+# nearest (regular) interpolation
+.nearest_rr = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+
+  x = .getBreaks(x)
+  y = .getBreaks(y)
+
+  dat = expand.grid(xout=xout, yout=yout)
+
+  indx = cut(dat$xout, breaks=x, labels=FALSE)
+  indy = cut(dat$yout, breaks=y, labels=FALSE)
+  ind = cbind(indx, indy)
+
+  out = list(x=xout, y=yout,
+             z=matrix(z[ind], nrow=length(xout), ncol=length(yout)))
+
+  return(out)
+
+}
+
+.nearest_ri = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+
+  x = .getBreaks(x)
+  y = .getBreaks(y)
+
+  indx = cut(as.numeric(xout), breaks=x, labels=FALSE)
+  indy = cut(as.numeric(yout), breaks=y, labels=FALSE)
+  ind = cbind(indx, indy)
+
+  out = list(x=xout, y=yout,
+             z=matrix(z[ind], nrow=nrow(xout), ncol=ncol(yout)))
+
+  return(out)
+
+}
+
+.nearest_ir = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+  stop("Method 'nearest' is not yet implemented for irregular grids (origin).")
+}
+
+.nearest_ii = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+  stop("Method 'nearest' is not yet implemented for irregular grids (origin).")
 }
 
 

@@ -29,7 +29,7 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
   if(is.null(ndim)) ndim = c(length(grid$longitude), length(grid$latitude))
   if(is.null(ndim)) stop("The grid has no the proper information.")
 
-  MARGIN = seq_along(dim(object$x))[-c(1,2)]
+  MARGIN = seq_along(dim(object$x))[-c(1,2)] # all dimensions, including depth
   xx = apply(object$x, MARGIN, .interp, x=object$longitude, y=object$latitude,
              xout=grid$longitude, yout=grid$latitude, method=method, extrap=extrap,
              control=control, ...)

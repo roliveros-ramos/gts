@@ -47,8 +47,10 @@ interpolate = function(x, y, z, ...) {
 
   case = sprintf("%s%s", c("r", "i", "i")[input$case], c("r", "i", "i")[output$case])
   FUN = get(sprintf(".%s_%s", method, case), mode="function")
+  hasNA = input$hasNA
 
-  if(input$hasNA) {
+  if(input$case["is_point"]) {
+    # we use input$data because it has NAs removed
     if(nrow(input$data) < 3) {
       out = list(x=xout, y=yout, z=NA*xout)
       # if(use_link) out$z = trans$linkinv(out$z)
@@ -60,7 +62,7 @@ interpolate = function(x, y, z, ...) {
     z = input$data$z
   }
 
-  out = try(FUN(x, y, z, xout, yout, method, extrap, control, ...))
+  out = try(FUN(x, y, z, xout, yout, method, extrap, hasNA, control, ...))
 
   if(inherits(out, "try-error")) {
     out = list(x=xout, y=yout, z=NA*xout)
@@ -94,63 +96,85 @@ interpolate.default = .interpolate
 # Internal functions: akima -----------------------------------------------
 
 # bilinear interpolation
-.bilinear_rr = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.bilinear_rr = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   .akima_rr(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
 }
 
-.bilinear_ri = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.bilinear_ri = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   .akima_ri(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
 }
 
-.bilinear_ir = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.bilinear_ir = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   .akima_ir(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
 }
 
-.bilinear_ii = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.bilinear_ii = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   .akima_ii(x=x, y=y, z=z, xout=xout, yout=yout,
             method="linear", extrap=extrap, control=control, ...)
 }
 
 
 # splines
-.akima_rr = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.akima_rr = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   # method = c("linear", "akima")
   # bilinear does not extrapolate (put 0s)
   # bicubic does extrapolate. Could be deactivated (add it).
 
-  dat = expand.grid(xout=xout, yout=yout)
+  if(!hasNA) {
 
-  out = .akima_ri(x=x, y=y, z=z, xout=dat$xout, yout=dat$yout,
-                  method=method, extrap=extrap, control=control, ...)
+    dat = expand.grid(xout=xout, yout=yout)
+    out = .akima_ri(x=x, y=y, z=z, xout=dat$xout, yout=dat$yout,
+                    method=method, extrap=extrap, control=control, ...)
+    out = list(x=xout, y=yout,
+               z=matrix(out$z, nrow=length(xout), ncol=length(yout)))
+    return(out)
 
-  out = list(x=xout, y=yout,
-             z=matrix(out$z, nrow=length(xout), ncol=length(yout)))
+  } else {
 
-  return(out)
+    if(!is.matrix(x)) x = matrix(x, ncol=ncol(z), nrow=nrow(z))
+    if(!is.matrix(y)) y = matrix(y, ncol=ncol(z), nrow=nrow(z), byrow=TRUE)
+    dat = data.frame(x=as.numeric(x), y=as.numeric(y), z=as.numeric(z))
+    dat = dat[complete.cases(dat), ] # remove NAs
+    .akima_ir(x=dat$x, y=dat$y, z=dat$z, xout=xout, yout=yout,
+              method=method, extrap=extrap, control=control, ...)
+
+  }
 
 }
 
-.akima_ri = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.akima_ri = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   # bilinear does not extrapolate (put 0s)
   # bicubic does extrapolate. Could be desactivated (add it).
 
-  linear = (method == "linear")
+  if(hasNA) {
 
-  if(isTRUE(linear)) {
-    out = bilinear(x=x, y=y, z=z, x0=xout, y0=yout)
+    linear = (method == "linear")
+    if(isTRUE(linear)) {
+      out = bilinear(x=x, y=y, z=z, x0=xout, y0=yout)
+    } else {
+      out = bicubic(x=x, y=y, z=z, x0=xout, y0=yout)
+    }
+    return(out)
+
   } else {
-    out = bicubic(x=x, y=y, z=z, x0=xout, y0=yout)
+
+    if(!is.matrix(x)) x = matrix(x, ncol=ncol(z), nrow=nrow(z))
+    if(!is.matrix(y)) y = matrix(y, ncol=ncol(z), nrow=nrow(z), byrow=TRUE)
+    dat = data.frame(x=as.numeric(x), y=as.numeric(y), z=as.numeric(z))
+    dat = dat[complete.cases(dat), ] # remove NAs
+    .akima_ii(x=dat$x, y=dat$y, z=dat$z, xout=xout, yout=yout,
+              method=method, extrap=extrap, control=control, ...)
+
   }
-  return(out)
 
 }
 
-.akima_ir = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.akima_ir = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   linear = (method == "linear")
 
@@ -188,7 +212,7 @@ interpolate.default = .interpolate
 
 }
 
-.akima_ii = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.akima_ii = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   linear = (method == "linear")
 
@@ -209,7 +233,7 @@ interpolate.default = .interpolate
 }
 
 # nearest (regular) interpolation
-.nearest_rr = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.nearest_rr = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   x = .getBreaks(x)
   y = .getBreaks(y)
@@ -227,7 +251,7 @@ interpolate.default = .interpolate
 
 }
 
-.nearest_ri = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.nearest_ri = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   x = .getBreaks(x)
   y = .getBreaks(y)
@@ -243,11 +267,11 @@ interpolate.default = .interpolate
 
 }
 
-.nearest_ir = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.nearest_ir = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   stop("Method 'nearest' is not yet implemented for irregular grids (origin).")
 }
 
-.nearest_ii = function(x, y, z, xout, yout, method, extrap=FALSE, control=list(), ...) {
+.nearest_ii = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   stop("Method 'nearest' is not yet implemented for irregular grids (origin).")
 }
 
@@ -300,7 +324,7 @@ interpolate.default = .interpolate
     dat = data.frame(x=as.numeric(x), y=as.numeric(y), z=as.numeric(z))
     dat = dat[complete.cases(dat), ]
 
-    out = list(case=c(is_gridR=FALSE, is_gridI=FALSE, is_point=TRUE),
+    out = list(case=c(is_gridR=is_gridR, is_gridI=is_gridI, is_point=is_point),
                hasNA=TRUE, data=dat)
 
     return(out)

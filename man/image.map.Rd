@@ -4,7 +4,7 @@
 \alias{image.map}
 \title{Draw an image plot with geographical coordinates and coastlines.}
 \usage{
-image.map(
+\method{image}{map}(
   lon,
   lat,
   z,

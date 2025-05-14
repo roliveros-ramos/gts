@@ -1,7 +1,7 @@
 Package: gts
 Type: Package
 Title: Gridded Time-Series
-Version: 0.1.9006
+Version: 0.1.9007
 Author: Ricardo Oliveros-Ramos
 Maintainer: Ricardo Oliveros-Ramos <ricardo.oliveros@gmail.com>
 Description: Management of gridded time-series (arrays with a time dimension),

@@ -343,6 +343,7 @@ is_climatology.gts = function(x, ...) {
 
 setOldClass("gts")
 setOldClass("grid")
+setOldClass("static")
 
 
 # setMethod('Ops', signature(e1='gts', e2='ANY'), Ops.gts)

@@ -84,6 +84,8 @@ roll = function(X, MARGIN=NULL, FUN, lag=1, ...) {
     for(i in seq_len(n)) {
       out[i] = .FUN(x[i + seq_len(lag+1) - 1], ...)
     }
+    # ..FUN = function(i) .FUN(x[i + seq_len(lag+1) - 1])
+    # out = sapply(1:n, FUN=..FUN)
     return(out)
   }
 

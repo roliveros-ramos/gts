@@ -22,7 +22,7 @@ if(!isGeneric("regrid")) {
 
 regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=list(), ...) {
 
-  if(inherits(grid, "gts")) grid = grid$grid
+  if(inherits(grid, "gts") | inherits(grid, "static")) grid = grid$grid
 
   ndim = if(!is.null(grid$mask)) dim(grid$mask) else dim(grid$LAT)
   if(is.null(ndim)) ndim = dim(grid$longitude)
@@ -30,10 +30,16 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
   if(is.null(ndim)) stop("The grid has no the proper information.")
 
   MARGIN = seq_along(dim(object$x))[-c(1,2)] # all dimensions, including depth
-  xx = apply(object$x, MARGIN, .interp, x=object$longitude, y=object$latitude,
-             xout=grid$longitude, yout=grid$latitude, method=method, extrap=extrap,
-             control=control, ...)
-  # xx = unlist(xx)
+  if(length(MARGIN)>0) {
+    xx = apply(object$x, MARGIN, .interp, x=object$longitude, y=object$latitude,
+               xout=grid$longitude, yout=grid$latitude, method=method, extrap=extrap,
+               control=control, ...)
+    # xx = unlist(xx)
+  } else {
+    xx = .interp(object$x, x=object$longitude, y=object$latitude,
+                 xout=grid$longitude, yout=grid$latitude, method=method, extrap=extrap,
+                 control=control, ...)
+  }
 
   dim(xx) = c(ndim, dim(object$x)[-c(1,2)])
 
@@ -80,4 +86,6 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
 
 setMethod('regrid', signature(object='gts', grid='gts'), regrid_gts)
 setMethod('regrid', signature(object='gts', grid='grid'), regrid_gts)
+setMethod('regrid', signature(object='static', grid='gts'), regrid_gts)
+setMethod('regrid', signature(object='static', grid='grid'), regrid_gts)
 

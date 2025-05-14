@@ -88,3 +88,31 @@ subset.grid = function(x, longitude=NULL, latitude=NULL, index.return=FALSE, gri
 
 }
 
+
+#' @rdname subset.gts
+#' @export
+subset.static = function(x, longitude=NULL, latitude=NULL, grid=NULL, expand=0, ...) {
+
+  x$grid = subset(x$grid, longitude=longitude, latitude=latitude, index.return=TRUE, grid=grid, expand=expand, ...)
+  x$longitude = x$grid$longitude
+  x$latitude = x$grid$latitude
+
+  if(!is.matrix(x$longitude) & !is.matrix(x$latitude)) {
+    x$breaks[[1]] = .getBreaks(x$longitude)
+    x$breaks[[2]] = .getBreaks(x$latitude)
+  }
+
+  if(length(dim(x$x))==2) x$x = x$x[x$grid$index$lon, x$grid$index$lat, drop=FALSE]
+  if(length(dim(x$x))==3) x$x = x$x[x$grid$index$lon, x$grid$index$lat, , drop=FALSE]
+
+  x$info$dim[[1]] = x$info$dim[[1]][x$grid$index$lon]
+  x$info$dim[[2]] = x$info$dim[[2]][x$grid$index$lat]
+
+  if("i" %in% names(x$info$dim)) x$info$dim$i = seq_along(x$info$dim$i)
+  if("j" %in% names(x$info$dim)) x$info$dim$j = seq_along(x$info$dim$j)
+
+  x$grid$index = NULL
+
+  return(x)
+
+}

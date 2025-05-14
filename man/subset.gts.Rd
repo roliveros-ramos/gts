@@ -3,6 +3,7 @@
 \name{subset.gts}
 \alias{subset.gts}
 \alias{subset.grid}
+\alias{subset.static}
 \title{Subsetting a spatial time series object}
 \usage{
 \method{subset}{gts}(x, longitude = NULL, latitude = NULL, grid = NULL, expand = 0, ...)
@@ -16,6 +17,8 @@
   expand = 0,
   ...
 )
+
+\method{subset}{static}(x, longitude = NULL, latitude = NULL, grid = NULL, expand = 0, ...)
 }
 \arguments{
 \item{x}{the object to be subsetted.}

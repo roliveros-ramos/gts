@@ -12,7 +12,7 @@ version](https://img.shields.io/github/r-package/v/roliveros-ramos/gts?label=Git
 [![GitHub
 issues](https://img.shields.io/github/issues/roliveros-ramos/gts)](https://github.com/roliveros-ramos/gts/issues)
 [![OpenSSF Best
-Practices](https://www.bestpractices.dev/projects/2132/badge)](https://www.bestpractices.dev/projects/2132)
+Practices](https://www.bestpractices.dev/projects/10585/badge)](https://www.bestpractices.dev/projects/10585)
 [![](http://cranlogs.r-pkg.org/badges/gts)](https://CRAN.R-project.org/package=gts)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/gts)](https://CRAN.R-project.org/package=gts)
 [![codecov](https://codecov.io/gh/roliveros-ramos/gts/graph/badge.svg?token=HELOL3WS4G)](https://app.codecov.io/gh/roliveros-ramos/gts)
@@ -31,10 +31,7 @@ See <https://roliveros-ramos.github.io/gts/> for more details.
 
 ``` r
 # The easiest way to get gts is to install it from CRAN:
- #install.packages("gts")
-
-# Alternatively, install the stable development version from OSMOSE drat repository:
-install.packages("gts", repo="https://osmose-model.github.io/drat/")
+#install.packages("gts")
 
 # Or the development version from GitHub:
 # install.packages("remotes")

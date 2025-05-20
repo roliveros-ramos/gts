@@ -339,6 +339,37 @@ is_climatology.gts = function(x, ...) {
   return(x$info$climatology)
 }
 
+#' @export
+drop = function(x, ...) {
+  UseMethod("drop")
+}
+
+#' @export
+drop.default = function(x, ...) {
+  base::drop(x=x)
+}
+
+#' @export
+drop.gts = function(x, ...) {
+  ndim = dim(x)
+  if(length(ndim)==3) return(x)
+  if(ndim[3]==1) {
+    dim(x$x) = ndim[-3]
+    x$depth = NULL
+    # check grid
+    return(x)
+  }
+}
+
+#' @export
+drop.static = function(x, ...) {
+  ndim = dim(x)
+  if(length(ndim)==2) return(x)
+  x$x = drop(x$x)
+  # check grid and attributes? do it at read time?
+  return(x)
+}
+
 # S4 compatibility --------------------------------------------------------
 
 setOldClass("gts")

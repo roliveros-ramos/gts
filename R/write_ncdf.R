@@ -17,6 +17,9 @@ write_ncdf.gts = function(x, filename, varid, longname, prec="float",
 }
 
 #' @export
+write_ncdf.grid = write_ncdf.gts
+
+#' @export
 write_ncdf.grid = function(x, filename, varid, longname, prec="float",
                           missval=NA, compression=9, chunksizes=NA, verbose=FALSE,
                           dim.longname, unlim=FALSE, global=list(),

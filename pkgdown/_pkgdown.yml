@@ -1,0 +1,5 @@
+url: https://roliveros-ramos.github.io/gts/
+template:
+  bootstrap: 5
+  math-rendering: katex
+

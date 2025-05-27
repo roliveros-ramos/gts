@@ -1,11 +1,11 @@
 Package: gts
 Type: Package
-Title: Gridded Time-Series manipulation and analysis
-Version: 0.1.9010
+Title: Gridded time series data manipulation and analysis
+Version: 0.1.9012
 Author: Ricardo Oliveros-Ramos
 Maintainer: Ricardo Oliveros-Ramos <ricardo.oliveros@gmail.com>
 Description: Management of gridded time-series (arrays with a time dimension),
-    normally geographical (longitude, latitude, depth/altitude). The package provides
+    with geographical dimensions (longitude, latitude, depth/altitude). The package provides
     methods to read and write gridded time-series (GTS) objects and manage them using
     R time-series methods. 
 License: GPL-2
@@ -31,3 +31,5 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+URL: https://roliveros-ramos.github.io/gts/
+BugReports: https://github.com/roliveros-ramos/gts/issues

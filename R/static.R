@@ -4,11 +4,10 @@
 #' @param varid Variable to read static variable (time-invariant).
 #' @param ... Additional arguments, currently unused.
 #'
-#' @returns
+#' @returns An object of class 'static'
 #' @export
 #' @inheritParams read_grid
 #' @inheritParams read_gts
-#' @examples
 read_static = function(filename, varid=NULL, create_mask=FALSE, ...) {
 
   control = list(...)
@@ -42,6 +41,15 @@ read_static = function(filename, varid=NULL, create_mask=FALSE, ...) {
     varid = varid[ind]
     message(sprintf("Reading variable '%s'.", varid))
   }
+
+  # get global attributes, units and long_name
+  gatt = ncatt_get(nc, varid=0)
+
+  tmp = ncatt_get(nc, varid=varid, attname = "units")
+  var_unit = if(tmp$hasatt) tmp$value else ""
+
+  tmp = ncatt_get(nc, varid=varid, attname = "long_name")
+  long_name = if(tmp$hasatt) tmp$value else varid
 
   ndimx = nc$var[[varid]]$varsize
   hasdepth = if(length(ndimx)==3) TRUE else FALSE
@@ -143,16 +151,22 @@ read_static = function(filename, varid=NULL, create_mask=FALSE, ...) {
   odim = if(hasdepth) list(nlon, nlat, dimx[[3]]) else list(nlon, nlat)
   names(odim) = c(lon_name, lat_name, depth_name)
 
+  ovar = c(lon_var, lat_var, "x")
+  ovarid = c(lon_var, lat_var, varid)
+
   dim.units = c(dlon_unit, dlat_unit, depth_conf$depth_unit)
   names(dim.units) = c(lon_name, lat_name, depth_name)
 
+  units = c(lon_unit, lat_unit, var_unit)
+
+  # create grid
   grid = list(longitude=longitude, latitude=latitude, rho=list(LON=LON, LAT=LAT),
               psi=list(LON=pLON, LAT=pLAT), LON=LON, LAT=LAT, area=NULL, mask=NULL,
               df=data.frame(lon=as.numeric(LON), lat=as.numeric(LAT)))
   class(grid) =  c("grid", class(grid))
 
-  grid = fill(grid, control=list(create_psi=.is_regular_grid(grid)))
-  grid$area = suppressMessages(area(grid))
+  #grid = fill(grid, control=list(create_psi=.is_regular_grid(grid)))
+  #grid$area = suppressMessages(area(grid))
 
   # creating mask
   if(isTRUE(create_mask)) {
@@ -187,6 +201,15 @@ read_static = function(filename, varid=NULL, create_mask=FALSE, ...) {
   grid$info = .grid_info(grid)
 
   out = list(x=x, grid=grid)
+  out$longitude = longitude
+  out$latitude = latitude
+  out$breaks = breaks
+
+  out$info  = list(varid=varid, long_name=long_name,
+                   depth=depth_conf,
+                   dim = odim, var=ovar, dim.units=dim.units,
+                   units=units, ovarid=ovarid, global=gatt)
+
   class(out) = c("static")
 
   return(out)

@@ -3,4 +3,8 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   gts: gts.html
-last_built: 2025-05-20T22:41Z
+  v02-integration_data_frames: v02-integration_data_frames.html
+last_built: 2025-05-23T23:01Z
+urls:
+  reference: https://roliveros-ramos.github.io/gts/reference
+  article: https://roliveros-ramos.github.io/gts/articles

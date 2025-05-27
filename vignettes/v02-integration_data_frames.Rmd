@@ -1,0 +1,22 @@
+---
+title: "Joining gridded environmental data to spatiotemporal observations"
+author: "Ricardo Oliveros-Ramos"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{v02-integration_data_frames}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gts)
+# melt and merge
+```

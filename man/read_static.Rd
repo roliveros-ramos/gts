@@ -15,6 +15,9 @@ read_static(filename, varid = NULL, create_mask = FALSE, ...)
 
 \item{...}{Additional arguments, currently unused.}
 }
+\value{
+An object of class 'static'
+}
 \description{
 Read an static variable from a netCDF file
 }

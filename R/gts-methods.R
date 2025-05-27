@@ -44,7 +44,7 @@ Ops.gts = function(e1, e2) {
     return(e1)
   }
 
-  # For simplicity, just assumme the e1 must be a gts object
+  # For simplicity, just assume the e1 must be a gts object
   if(!inherits(e1, "gts") & inherits(e2, "gts")) {
     return(get(.Generic, mode="function")(e2, e1))
   }
@@ -361,22 +361,11 @@ drop.gts = function(x, ...) {
   }
 }
 
-#' @export
-drop.static = function(x, ...) {
-  ndim = dim(x)
-  if(length(ndim)==2) return(x)
-  x$x = drop(x$x)
-  # check grid and attributes? do it at read time?
-  return(x)
-}
-
 # S4 compatibility --------------------------------------------------------
 
 setOldClass("gts")
 setOldClass("grid")
 setOldClass("static")
-
-
 # setMethod('Ops', signature(e1='gts', e2='ANY'), Ops.gts)
 # setMethod('Arith', signature(e1='ANY', e2='gts'), Arith_gts)
 # setMethod('Arith', signature(e1='gts', e2='ANY'), Ops.gts)

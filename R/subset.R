@@ -7,6 +7,7 @@
 #' @param latitude The range of latitude to subset the grid.
 #' @param grid A grid object, or a 'gts' object.
 #' @param expand Number of units to expand the grid, generally degrees.
+#' @param frequency Frequency values to subset.
 #' It can be one number or two (longitude, latitude).
 #' @param ... further arguments to be passed to or from other methods.
 #'

@@ -255,11 +255,6 @@ quantile.gts = function(x, probs = seq(0, 1, 0.25), na.rm = TRUE, names = TRUE,
 }
 
 #' @export
-melt = function (data, ..., na.rm = FALSE, value.name = "value") {
-  UseMethod("melt", data)
-}
-
-#' @export
 melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
 
   time_var = data$info$time_var

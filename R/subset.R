@@ -13,27 +13,54 @@
 #' @return A 'gts' object after subsetting.
 #' @export
 #'
-subset.gts = function(x, longitude=NULL, latitude=NULL, grid=NULL, expand=0, ...) {
+subset.gts = function(x, longitude=NULL, latitude=NULL, grid=NULL, frequency=NULL, expand=0, ...) {
 
-  x$grid = subset(x$grid, longitude=longitude, latitude=latitude, index.return=TRUE, grid=grid, expand=expand, ...)
-  x$longitude = x$grid$longitude
-  x$latitude = x$grid$latitude
-
-  if(!is.matrix(x$longitude) & !is.matrix(x$latitude)) {
-    x$breaks[[1]] = .getBreaks(x$longitude)
-    x$breaks[[2]] = .getBreaks(x$latitude)
+  if(!is.null(frequency)) {
+    frequency = as.integer(frequency)
+    if(any(is.na(frequency))) stop("Frequency argument must specify integers with the ts cycle.")
+    if(any(frequency<1)) stop("Frecuency must be positive.")
+    if(any(frequency > frequency(x))) stop("Frecuency values must be lower than the ts frequency.")
   }
 
-  if(length(dim(x$x))==3) x$x = x$x[x$grid$index$lon, x$grid$index$lat, , drop=FALSE]
-  if(length(dim(x$x))==4) x$x = x$x[x$grid$index$lon, x$grid$index$lat, , , drop=FALSE]
+  if(!is.null(longitude) | !is.null(latitude) | !is.null(grid)) {
 
-  x$info$dim[[1]] = x$info$dim[[1]][x$grid$index$lon]
-  x$info$dim[[2]] = x$info$dim[[2]][x$grid$index$lat]
+    x$grid = subset(x$grid, longitude=longitude, latitude=latitude, index.return=TRUE, grid=grid, expand=expand, ...)
+    x$longitude = x$grid$longitude
+    x$latitude = x$grid$latitude
 
-  if("i" %in% names(x$info$dim)) x$info$dim$i = seq_along(x$info$dim$i)
-  if("j" %in% names(x$info$dim)) x$info$dim$j = seq_along(x$info$dim$j)
+    if(!is.matrix(x$longitude) & !is.matrix(x$latitude)) {
+      x$breaks[[1]] = .getBreaks(x$longitude)
+      x$breaks[[2]] = .getBreaks(x$latitude)
+    }
 
-  x$grid$index = NULL
+    if(length(dim(x$x))==3) x$x = x$x[x$grid$index$lon, x$grid$index$lat, , drop=FALSE]
+    if(length(dim(x$x))==4) x$x = x$x[x$grid$index$lon, x$grid$index$lat, , , drop=FALSE]
+
+    x$info$dim[[1]] = x$info$dim[[1]][x$grid$index$lon]
+    x$info$dim[[2]] = x$info$dim[[2]][x$grid$index$lat]
+
+    if("i" %in% names(x$info$dim)) x$info$dim$i = seq_along(x$info$dim$i)
+    if("j" %in% names(x$info$dim)) x$info$dim$j = seq_along(x$info$dim$j)
+
+    x$grid$index = NULL
+
+  }
+
+  if(!is.null(frequency)) {
+
+    if(any(is.na(frequency))) stop("Frequency argument must specify integers with the ts cycle.")
+
+    ind = which(cycle(x) %in% frequency)
+    if(length(dim(x$x))==3) x$x = x$x[, , ind, drop=FALSE]
+    if(length(dim(x$x))==4) x$x = x$x[, , , ind, drop=FALSE]
+
+    x$time = time(obs)[ind]
+    x$breaks$time = .getBreaks(x$time)
+    x$info$time$time = x$time
+    x$info$dim$time = x$time
+    x$info$ts = NULL
+
+  }
 
   return(x)
 

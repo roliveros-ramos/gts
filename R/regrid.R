@@ -85,7 +85,10 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
 
 
 setMethod('regrid', signature(object='gts', grid='gts'), regrid_gts)
+setMethod('regrid', signature(object='gts', grid='static'), regrid_gts)
 setMethod('regrid', signature(object='gts', grid='grid'), regrid_gts)
+
 setMethod('regrid', signature(object='static', grid='gts'), regrid_gts)
+setMethod('regrid', signature(object='static', grid='static'), regrid_gts)
 setMethod('regrid', signature(object='static', grid='grid'), regrid_gts)
 

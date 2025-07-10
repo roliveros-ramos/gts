@@ -4,6 +4,10 @@ NULL
 NULL
 #' @export write_ncdf
 NULL
+#' @importFrom reshape2 melt
+NULL
+#' @export melt
+NULL
 #' @importFrom fields poly.image image.plot interp.surface.grid tim.colors
 #' imageplot.info imageplot.setup
 NULL

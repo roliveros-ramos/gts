@@ -132,6 +132,7 @@ units.static = units.gts
 #' @export
 str.static = str.gts
 
+# #' @exportS3Method reshape2::melt
 #' @export
 melt.static = function(data, ..., na.rm=FALSE, value.name=NULL) {
 

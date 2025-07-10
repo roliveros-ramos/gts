@@ -267,7 +267,7 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE,
 
 #' @exportS3Method plot grid
 plot.grid = function(x, land.col="darkolivegreen4", sea.col="aliceblue", prob=FALSE,
-                     boundaries.col="black", grid=TRUE, grid.lwd=1, grid.col="lightgray",
+                     boundaries.col="black", grid=NULL, grid.lwd=1, grid.col="lightgray",
                      hires=FALSE, lwd=2, ...) {
 
   is_regular = .is_regular_grid(x)
@@ -281,10 +281,13 @@ plot.grid = function(x, land.col="darkolivegreen4", sea.col="aliceblue", prob=FA
       z = x$prob
       col = divergencePalette(n=x$n, zlim=c(0,1), col=c(land.col, sea.col), center = 0.5, p=0.4)
       zlim = c(0, 1)
+      if(is.null(grid)) grid=TRUE
     } else {
       z = x$mask
+      z[is.na(z)] = 0
       col = c(land.col, sea.col)
-      zlim = c(0,1)
+      zlim = c(0, 1)
+      if(is.null(grid)) grid=FALSE
       }
   }
 
@@ -325,6 +328,30 @@ is_ocean = function(lon, lat, hires=FALSE) {
   coords = coords[xind, ]
 
   layer = if(isTRUE(hires)) land_hr else land_lr
+
+  crs = suppressWarnings(CRS(proj4string(layer)))
+  sets = SpatialPoints(cbind(lon=coords[, "lon"], lat=coords[, "lat"]),
+                       proj4string=crs)
+  ind = xind[which(is.na(over(sets, layer)))]
+  out[ind] = TRUE
+  return(out)
+}
+
+#' Find if points are over a layer (Spatial Polygon)
+#'
+#' @param layer A spatialPolygons object
+#'
+#' @returns A data.frame with TRUE/FALSE.
+#' @export
+#'
+#' @inheritParams is_ocean
+is_over = function(lon, lat, layer) {
+
+  coords = cbind(lon=lon, lat=lat)
+  out = rep(FALSE, length=nrow(coords))
+  out[which(!complete.cases(coords))] = NA
+  xind = which(complete.cases(coords))
+  coords = coords[xind, ]
 
   crs = suppressWarnings(CRS(proj4string(layer)))
   sets = SpatialPoints(cbind(lon=coords[, "lon"], lat=coords[, "lat"]),

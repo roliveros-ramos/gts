@@ -60,13 +60,12 @@ interp = function(z, x, y, xout, yout, FUN, extrap=FALSE, control=list(), ...) {
 
   ndim = dim(xout)
   if(is.null(ndim) | length(ndim)==1) ndim = c(length(xout), length(yout))
-
   MARGIN = seq_along(dim(z))[-c(1,2)] # all dimensions, including depth
   if(length(MARGIN)>0) {
     xx = apply(z, MARGIN, FUN=.interp, x=x, y=y, xout=xout, yout=yout, iFUN=FUN,
                extrap=extrap, control=control, ...)
   } else {
-    xx = .interp(z, x=x, y=y, xout=xout, yout=xout, iFUN=FUN,
+    xx = .interp(z, x=x, y=y, xout=xout, yout=yout, iFUN=FUN,
                  extrap=extrap, control=control, ...)
   }
   dim(xx) = c(ndim, dim(z)[-c(1,2)])

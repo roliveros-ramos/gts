@@ -20,7 +20,7 @@ if(!isGeneric("regrid")) {
 
 # Internal functions ------------------------------------------------------
 
-regrid_gts = function(object, grid, method=NULL, extrap=FALSE, control=list(), ...) {
+regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=list(), ...) {
 
   on.exit(gc(verbose=FALSE))
 

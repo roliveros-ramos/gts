@@ -6,7 +6,15 @@
 \alias{subset.static}
 \title{Subsetting a spatial time series object}
 \usage{
-\method{subset}{gts}(x, longitude = NULL, latitude = NULL, grid = NULL, expand = 0, ...)
+\method{subset}{gts}(
+  x,
+  longitude = NULL,
+  latitude = NULL,
+  grid = NULL,
+  frequency = NULL,
+  expand = 0,
+  ...
+)
 
 \method{subset}{grid}(
   x,
@@ -29,8 +37,10 @@
 
 \item{grid}{A grid object, or a 'gts' object.}
 
-\item{expand}{Number of units to expand the grid, generally degrees.
+\item{frequency}{Frequency values to subset.
 It can be one number or two (longitude, latitude).}
+
+\item{expand}{Number of units to expand the grid, generally degrees.}
 
 \item{...}{further arguments to be passed to or from other methods.}
 }

@@ -15,6 +15,8 @@
 
 \item{by}{Width of the integration interval, 1 by default.}
 
+\item{subdivisions}{Number of subdivisions to be used}
+
 \item{...}{Additional arguments, currently unused.}
 }
 \value{

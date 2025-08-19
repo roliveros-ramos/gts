@@ -305,6 +305,12 @@ melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
 
   }
 
+  other = list(...)
+  if(length(other)>0) {
+    other = lapply(other, FUN=.strip, target=data)
+    other = as.data.frame(other)
+    out = cbind(out, other)
+  }
   return(out)
 
 }

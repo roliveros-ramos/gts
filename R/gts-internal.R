@@ -16,3 +16,8 @@ DateStamp = function(...) cat(..., "\t\t | ", date(), "\n\n")
 
 logit = function(x) log(x/(1-x))
 logistic = function(x) 1/(1 + exp(-x))
+
+.strip = function(object, target) {
+  tmp = 0*target + object
+  return(as.numeric(tmp$x))
+}

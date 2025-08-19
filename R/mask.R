@@ -28,15 +28,39 @@ mask.grid = function(x, n=2, thr=0.8, hires=FALSE, ocean=TRUE, ...) {
 #' @export
 mask.gts = function(x, n=2, thr=0.8, hires=FALSE, ocean=TRUE, ...) {
   if(!is.null(x$grid$mask)) return(x$grid$mask)
-  return(mask(x$grid, n=n, thr=thr, hires=hires, ocean=ocean, ...))
+  return(mask(x$x, ...))
+}
+
+#' @rdname mask
+#' @export
+mask.static = function(x, n=2, thr=0.8, hires=FALSE, ocean=TRUE, ...) {
+  if(!is.null(x$grid$mask)) return(x$grid$mask)
+  x = drop(x)
+  if(length(dim(x))!=2) {
+    warning("Automatic mask extraction only for 2D static matrices.")
+    return(NULL)
+  }
+  return(mask(x$x, ...))
 }
 
 #' @rdname mask
 #' @export
 mask.array = function(x, ...) {
   x = drop(x)
-  if(length(dim(x))!=3) stop("Automatic mask extraction only for 3D arrays.")
+  if(length(dim(x))!=3) {
+    warning("Automatic mask extraction only for 3D arrays.")
+    return(NULL)
+  }
   out = apply(x, 1:2, FUN = function(x) !all(is.na(x)))
+  out = 0 + out
+  return(out)
+}
+
+#' @rdname mask
+#' @export
+mask.matrix = function(x, ...) {
+  x = drop(x)
+  out = !(is.na(x))
   out = 0 + out
   return(out)
 }

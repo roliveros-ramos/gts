@@ -524,7 +524,7 @@ interp_grid = function(grid) {
 
 .is_regular_grid = function(x) {
 
-  if(inherits(x, "gts")) x = x$grid
+  if(inherits(x, "gts") | inherits(x, "static")) x = x$grid
   almost.zero = function(x) (all(diff(x) < 1e-6))
 
   reg_lon = all(apply(x$LON, 1, almost.zero))
@@ -537,6 +537,10 @@ interp_grid = function(grid) {
 }
 
 .compare_grids = function(e1, e2, strict=TRUE) {
+
+  if(inherits(e1, "gts") | inherits(e1, "static")) e1=e1$grid
+  if(inherits(e2, "gts") | inherits(e2, "static")) e2=e2$grid
+
   if(isTRUE(strict)) return(identical(e1, e2))
   e1$mask = e2$mask = NULL
   e1$area = e2$area = NULL

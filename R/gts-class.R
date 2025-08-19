@@ -172,18 +172,22 @@ gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
   }
 
   # get longitude and latitude
-  ilat = grep(x=tolower(names(nc$var)), pattern="^lat")
-  ilon = grep(x=tolower(names(nc$var)), pattern="^lon")
+  nm = c(names(nc$var))
+  # remove bounds names
+  nm = grep(x=tolower(nm), pattern="bnd|bound", invert=TRUE, value=TRUE)
+  ilat = grep(x=tolower(nm), pattern="^lat")
+  ilon = grep(x=tolower(nm), pattern="^lon")
 
   if(length(ilat)==1 & length(ilon)==1) {
-    longitude = ncvar_get(nc, names(nc$var)[ilon])
-    latitude  = ncvar_get(nc, names(nc$var)[ilat])
+    longitude = ncvar_get(nc, nm[ilon])
+    latitude  = ncvar_get(nc, nm[ilat])
   } else {
     longitude = dimx[[1]]
     latitude  = dimx[[2]]
   }
 
   if(length(dim(longitude))<2) {
+    longitude = dimx[[1]] # replace in case order was changed
     LON = matrix(longitude, nrow=dims[1], ncol=dims[2])
     pLON = matrix(breaks[[1]], nrow=dims[1]+1, ncol=dims[2]+1)
     nlon = longitude
@@ -203,6 +207,7 @@ gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
   }
 
   if(length(dim(latitude))<2) {
+    latitude  = dimx[[2]] # replace in case order was changed
     LAT = matrix(latitude, nrow=dims[1], ncol=dims[2], byrow=TRUE)
     pLAT = matrix(breaks[[2]], nrow=dims[1]+1, ncol=dims[2]+1)
     nlat = latitude

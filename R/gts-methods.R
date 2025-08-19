@@ -111,6 +111,18 @@ print.gts = function(x, ...) {
   rlat = range(x$latitude)
   cat(sprintf("Longitude = [%0.2f, %0.2f]\n", rlon[1], rlon[2]))
   cat(sprintf("Latitude  = [%0.2f, %0.2f]\n", rlat[1], rlat[2]))
+  print(resolution(x))
+  return(invisible(NULL))
+}
+
+#' @export
+print.grid = function(x, ...) {
+  cat(sprintf("Grid object: %s (%s)\n", x$info$varid, tail(x$info$units, 1)))
+  rlon = range(x$longitude)
+  rlat = range(x$latitude)
+  cat(sprintf("Longitude = [%0.2f, %0.2f]\n", rlon[1], rlon[2]))
+  cat(sprintf("Latitude  = [%0.2f, %0.2f]\n", rlat[1], rlat[2]))
+  print(resolution(x))
   return(invisible(NULL))
 }
 
@@ -259,13 +271,14 @@ melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
 
   time_var = data$info$time_var
   if(is.null(time_var)) time_var = "time"
+  if(is.null(value.name)) value.name = names(data)[1]
 
   if(is.null(data$depth)) {
     out = data.frame(longitude=data$grid$df$lon, latitude=data$grid$df$lat,
                      time=rep(data$time, each=nrow(data$grid$df)),
                      value=as.numeric(data$x))
 
-    names(out)[3:4] = c(time_var, names(data)[1])
+    names(out)[3:4] = c(time_var, value.name)
 
   } else {
 
@@ -276,7 +289,7 @@ melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
                      time=rep(data$time, each=nrow(out)),
                      value=as.numeric(data$x))
 
-    names(out)[4:5] = c(time_var, names(data)[1])
+    names(out)[4:5] = c(time_var, value.name)
 
   }
 

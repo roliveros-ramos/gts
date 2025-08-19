@@ -29,11 +29,10 @@ interpolate = function(x, y, z, ...) {
 
 # Auxiliar functions ------------------------------------------------------
 
+# this only return the array z, and has it as first argument to be used with apply.
+.interp = function(z, x, y, xout, yout, iFUN, extrap=FALSE, control=list(), ...) {
 
-.interpolate = function(x, y, z, xout, yout, method="bilinear", extrap=FALSE, control=list(), ...) {
-
-  # check for arguments: x, y, z, xout, yout.
-  # decide input and output types
+  iFUN = match.fun(iFUN)
 
   use_link = !is.null(control$link)
   if(use_link) {
@@ -42,12 +41,71 @@ interpolate = function(x, y, z, ...) {
     control$link = NULL
   }
 
+  hasNA = control$hasNA
+
+  out = try(iFUN(x, y, z, xout, yout, extrap, hasNA, control, ...))
+
+  if(inherits(out, "try-error")) {
+    warning(out)
+    return(NA*xout)
+  }
+
+  if(use_link) out$z = trans$linkinv(out$z)
+
+  return(out$z)
+
+}
+
+interp = function(z, x, y, xout, yout, FUN, extrap=FALSE, control=list(), ...) {
+
+  ndim = dim(xout)
+  if(is.null(ndim) | length(ndim)==1) ndim = c(length(xout), length(yout))
+
+  MARGIN = seq_along(dim(z))[-c(1,2)] # all dimensions, including depth
+  if(length(MARGIN)>0) {
+    xx = apply(z, MARGIN, FUN=.interp, x=x, y=y, xout=xout, yout=yout, iFUN=FUN,
+               extrap=extrap, control=control, ...)
+  } else {
+    xx = .interp(z, x=x, y=y, xout=xout, yout=xout, iFUN=FUN,
+                 extrap=extrap, control=control, ...)
+  }
+  dim(xx) = c(ndim, dim(z)[-c(1,2)])
+  return(xx)
+}
+
+# Methods -----------------------------------------------------------------
+
+#' @export
+interpolate.default = function(x, y, z, xout, yout, method="bilinear", extrap=FALSE, control=list(), ...) {
+
+  # check for arguments: x, y, z, xout, yout.
+  # decide input and output types
+
   input  = .check_input(x=x, y=y, z=z)
   output = .check_output(x=xout, y=yout)
 
   case = sprintf("%s%s", c("r", "i", "i")[input$case], c("r", "i", "i")[output$case])
   FUN = get(sprintf(".%s_%s", method, case), mode="function")
-  hasNA = input$hasNA
+  control$hasNA = input$hasNA
+
+  if(output$case["is_gridR"]) {
+    dat = expand.grid(xout=xout, yout=yout)
+  } else {
+    dat = list(xout=xout, yout=yout)
+  }
+
+  if(method=="bilinear") {
+    control$W = get_bilinear_weights(x=x, y=y, xout=dat$xout, yout=dat$yout, mask=control$mask, extrap=extrap)
+  }
+
+  if(method=="nearest") {
+    control$ind = get_nearest_index(x=x, y=y, xout=dat$xout, yout=dat$yout)
+  }
+
+  if(method=="fill") {
+    control$ind = get_nearest_index(x=x, y=y, xout=dat$xout, yout=dat$yout)
+    control$W = get_bilinear_weights(x=x, y=y, xout=dat$xout, yout=dat$yout, mask=control$mask, extrap=extrap)
+  }
 
   if(input$case["is_point"]) {
     # we use input$data because it has NAs removed
@@ -62,67 +120,66 @@ interpolate = function(x, y, z, ...) {
     z = input$data$z
   }
 
-  out = try(FUN(x, y, z, xout, yout, method, extrap, hasNA, control, ...))
-
-  if(inherits(out, "try-error")) {
-    out = list(x=xout, y=yout, z=NA*xout)
-    warning(out)
-    return(out)
-  }
+  # barebone interpolation, plus transformation and error handling
+  out = list(x=xout, y=yout)
+  out$z = .interp(z=z, x=x, y=y, xout=xout, yout=yout, iFUN=FUN, extrap=extrap, control=control, ...)
 
   if(output$case["is_gridI"]) {
     dim(out$z) = dim(xout)
-    out$x = xout
-    out$y = yout
   }
-
-  if(use_link) out$z = trans$linkinv(out$z)
 
   return(out)
 
 }
 
-# this only return the array z, and has it as first argument to be used with apply.
-.interp = function(z, x, y, xout, yout, method="bilinear", extrap=FALSE, control=list(), ...) {
-  # to be optimize to reduce duplication of check_input and check_output
-  .interpolate(x=x, y=y, z=z, xout=xout, yout=yout, method=method, extrap=extrap, control=control, ...)$z
+
+# Bilinear interpolation --------------------------------------------------
+
+.bilinear_rr = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+
+  W = control$W
+  invalid = attr(W, "invalid")
+
+  out = list(x=xout, y=yout,
+             z=matrix(as.vector(W %*% as.vector(z)), nrow=length(xout), ncol=length(yout)))
+
+  out$z[invalid] = NA
+
+  return(out)
+
 }
 
-# Methods -----------------------------------------------------------------
+# .bilinear_rr = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+#   .akima_rr(x=x, y=y, z=z, xout=xout, yout=yout,
+#             method="linear", extrap=extrap, control=control, ...)
+# }
 
-#' @export
-interpolate.default = .interpolate
+.bilinear_ri = .bilinear_rr
 
-# Internal functions: akima -----------------------------------------------
-
-# bilinear interpolation
-.bilinear_rr = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
-  .akima_rr(x=x, y=y, z=z, xout=xout, yout=yout,
-            method="linear", extrap=extrap, control=control, ...)
+.bilinear_ir = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+  stop("Method 'bilinear' is not yet implemented for irregular grids (origin).")
+  # .akima_ir(x=x, y=y, z=z, xout=xout, yout=yout,
+  #           method="linear", extrap=extrap, control=control, ...)
 }
 
-.bilinear_ri = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
-  .akima_ri(x=x, y=y, z=z, xout=xout, yout=yout,
-            method="linear", extrap=extrap, control=control, ...)
+.bilinear_ii = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+  stop("Method 'bilinear' is not yet implemented for irregular grids (origin).")
+  # .akima_ii(x=x, y=y, z=z, xout=xout, yout=yout,
+  #           method="linear", extrap=extrap, control=control, ...)
 }
 
-.bilinear_ir = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
-  .akima_ir(x=x, y=y, z=z, xout=xout, yout=yout,
-            method="linear", extrap=extrap, control=control, ...)
-}
 
-.bilinear_ii = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
-  .akima_ii(x=x, y=y, z=z, xout=xout, yout=yout,
-            method="linear", extrap=extrap, control=control, ...)
-}
-
+# Akima bicubic interpolation ---------------------------------------------
 
 # splines
-.akima_rr = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.akima_rr = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   # method = c("linear", "akima")
   # bilinear does not extrapolate (put 0s)
   # bicubic does extrapolate. Could be deactivated (add it).
+
+  if(!is.null(control$linear)) control$linear = FALSE
+  method = if(isTRUE(control$linear)) "linear" else "akima"
 
   if(!hasNA) {
 
@@ -146,13 +203,15 @@ interpolate.default = .interpolate
 
 }
 
-.akima_ri = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.akima_ri = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
   # bilinear does not extrapolate (put 0s)
   # bicubic does extrapolate. Could be desactivated (add it).
 
-  if(hasNA) {
+  if(!is.null(control$linear)) control$linear = FALSE
+  method = if(isTRUE(control$linear)) "linear" else "akima"
 
+  if(hasNA) {
     linear = (method == "linear")
     if(isTRUE(linear)) {
       out = bilinear(x=x, y=y, z=z, x0=xout, y0=yout)
@@ -174,7 +233,10 @@ interpolate.default = .interpolate
 
 }
 
-.akima_ir = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.akima_ir = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+
+  if(!is.null(control$linear)) control$linear = FALSE
+  method = if(isTRUE(control$linear)) "linear" else "akima"
 
   linear = (method == "linear")
 
@@ -199,7 +261,7 @@ interpolate.default = .interpolate
   #
   # con[names(control)]  = control
   # out = interp::interp(x=x, y = y, z=z, xo=xout, yo=yout,
-  #              linear = (method == "linear"), extrap = extrap,
+  #              linear = (method == "bilinear"), extrap = extrap,
   #              input="points", output = "grid",
   #              method = method, duplicate = con$duplicate, dupfun = con$dupfun,
   #              nx = con$nx, ny = con$ny, deltri = con$deltri, h=con$h,
@@ -212,9 +274,12 @@ interpolate.default = .interpolate
 
 }
 
-.akima_ii = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.akima_ii = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
-  linear = (method == "linear")
+  if(!is.null(control$linear)) control$linear = FALSE
+  method = if(isTRUE(control$linear)) "linear" else "akima"
+
+  linear = (method == "bilinear")
 
   # options for akima::interpp
   con = list(duplicate = "error", dupfun = NULL,
@@ -232,17 +297,23 @@ interpolate.default = .interpolate
 
 }
 
-# nearest (regular) interpolation
-.nearest_rr = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
-  x = .getBreaks(x)
-  y = .getBreaks(y)
+# Nearest neighbour interpolation -----------------------------------------
 
-  dat = expand.grid(xout=xout, yout=yout)
+.nearest_rr = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
-  indx = cut(dat$xout, breaks=x, labels=FALSE)
-  indy = cut(dat$yout, breaks=y, labels=FALSE)
-  ind = cbind(indx, indy)
+  if(!is.null(control$ind)) {
+    ind = control$ind
+  } else {
+    x = .getBreaks(x)
+    y = .getBreaks(y)
+
+    dat = expand.grid(xout=xout, yout=yout)
+
+    indx = cut(dat$xout, breaks=x, labels=FALSE)
+    indy = cut(dat$yout, breaks=y, labels=FALSE)
+    ind = cbind(indx, indy)
+  }
 
   out = list(x=xout, y=yout,
              z=matrix(z[ind], nrow=length(xout), ncol=length(yout)))
@@ -251,14 +322,18 @@ interpolate.default = .interpolate
 
 }
 
-.nearest_ri = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.nearest_ri = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
 
-  x = .getBreaks(x)
-  y = .getBreaks(y)
+  if(!is.null(control$ind)) {
+    ind = control$ind
+  } else {
+    x = .getBreaks(x)
+    y = .getBreaks(y)
 
-  indx = cut(as.numeric(xout), breaks=x, labels=FALSE)
-  indy = cut(as.numeric(yout), breaks=y, labels=FALSE)
-  ind = cbind(indx, indy)
+    indx = cut(as.numeric(xout), breaks=x, labels=FALSE)
+    indy = cut(as.numeric(yout), breaks=y, labels=FALSE)
+    ind = cbind(indx, indy)
+  }
 
   out = list(x=xout, y=yout,
              z=matrix(z[ind], nrow=nrow(xout), ncol=ncol(yout)))
@@ -267,109 +342,11 @@ interpolate.default = .interpolate
 
 }
 
-.nearest_ir = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.nearest_ir = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   stop("Method 'nearest' is not yet implemented for irregular grids (origin).")
 }
 
-.nearest_ii = function(x, y, z, xout, yout, method, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
+.nearest_ii = function(x, y, z, xout, yout, extrap=FALSE, hasNA=FALSE, control=list(), ...) {
   stop("Method 'nearest' is not yet implemented for irregular grids (origin).")
-}
-
-
-# Internal functions: interpolate -----------------------------------------
-
-.check_input = function(x, y, z) {
-
-  x = drop(x)
-  y = drop(y)
-
-  if(length(x)==1) stop("Degenerate dimension x.")
-  if(length(y)==1) stop("Degenerate dimension y.")
-
-  z = drop(z)
-
-  isMatrix = is.matrix(x) & is.matrix(y)
-
-  # Either both inputs are vectors or matrices.
-  if(!isMatrix & is.matrix(x)) stop("Input y must be a matrix too.")
-  if(!isMatrix & is.matrix(y)) stop("Input x must be a matrix too.")
-
-  # check if matrices can be reduced to vectors!
-
-  isMonot  = monot(x, side=2) & monot(y, side=1)
-  sameDim  = identical(dim(x), dim(y)) & identical(dim(x), dim(z))
-  sameLen  = (length(x)==length(y)) & (length(x)==length(z))
-  consDim  = identical(c(length(x), length(y)), dim(z))
-
-  is_gridR = isTRUE(consDim & isMonot)
-  is_gridI = isTRUE(sameDim & isMonot & isMatrix)
-  is_point = isTRUE(sameLen & !isMatrix)
-
-  if(!any(is_gridR, is_gridI, is_point)) {
-    if(!is.matrix(x) & any(is.na(x))) stop("Input vector 'x' cannot contain NAs.")
-    if(!is.matrix(y) & any(is.na(y))) stop("Input vector 'y' cannot contain NAs.")
-    # pending validation
-    stop("Inputs x, y and z are not consistent.")
-  }
-
-  hasNA = any(is.na(x)) | any(is.na(y)) | any(is.na(z))
-
-  if(isTRUE(hasNA)) {
-
-    if(!isTRUE(is_point)) {
-      if(!is.matrix(x)) x = matrix(x, ncol=ncol(z), nrow=nrow(z))
-      if(!is.matrix(y)) y = matrix(y, ncol=ncol(z), nrow=nrow(z), byrow=TRUE)
-    }
-
-    dat = data.frame(x=as.numeric(x), y=as.numeric(y), z=as.numeric(z))
-    dat = dat[complete.cases(dat), ]
-
-    out = list(case=c(is_gridR=is_gridR, is_gridI=is_gridI, is_point=is_point),
-               hasNA=TRUE, data=dat)
-
-    return(out)
-
-  }
-
-  out = list(case=c(is_gridR=is_gridR, is_gridI=is_gridI, is_point=is_point),
-             hasNA=FALSE, data=NULL)
-  return(out)
-
-}
-
-.check_output = function(x, y) {
-
-  x = drop(x)
-  y = drop(y)
-
-  isMatrix = is.matrix(x) & is.matrix(y)
-
-  if(!isMatrix & is.matrix(x)) stop("Input y must be a matrix too.")
-  if(!isMatrix & is.matrix(y)) stop("Input x must be a matrix too.")
-
-  isMonot  = monot(x, side=2) & monot(y, side=1)
-  sameDim  = identical(dim(x), dim(y))
-  sameLen  = (length(x)==length(y))
-
-  is_gridR = isTRUE(isMonot & !isMatrix)
-  is_gridI = isTRUE(isMonot &  isMatrix)
-  is_point = isTRUE(!isMonot & sameLen & !isMatrix)
-
-  if(!any(is_gridR, is_gridI, is_point)) {
-    # pending validation
-    stop("Arguments 'xout' and 'yout' are not consistent.")
-  }
-
-  output = list(case=c(is_gridR=is_gridR, is_gridI=is_gridI, is_point=is_point))
-
-  return(output)
-
-}
-
-monot = function(x, side) {
-  .monot  = function(x) all(diff(x) > 0)
-  .monotM = function(x, side) all(apply(x, side, .monot))
-  if(is.matrix(x)) return(.monotM(x, side))
-  return(.monot(x))
 }
 

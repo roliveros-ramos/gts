@@ -92,6 +92,7 @@ print.static = function(x, ...) {
   rlat = range(x$latitude)
   cat(sprintf("Longitude = [%0.2f, %0.2f]\n", rlon[1], rlon[2]))
   cat(sprintf("Latitude  = [%0.2f, %0.2f]\n", rlat[1], rlat[2]))
+  print(resolution(x))
   return(invisible(NULL))
 }
 

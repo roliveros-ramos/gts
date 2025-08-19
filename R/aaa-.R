@@ -30,3 +30,5 @@ NULL
 NULL
 #' @importFrom maps map
 NULL
+#' @importFrom Matrix sparseMatrix
+NULL

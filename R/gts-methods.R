@@ -34,6 +34,8 @@ Math2.gts = function(x, ...) {
   return(x)
 }
 
+#' @export
+chooseOpsMethod.gts = function(x, y, mx, my, cl, reverse) TRUE
 
 #' @export
 Ops.gts = function(e1, e2) {
@@ -51,7 +53,14 @@ Ops.gts = function(e1, e2) {
 
   # If e2 is not gts, we deal with the case it is a matrix and move on.
   if(inherits(e1, "gts") & !inherits(e2, "gts")) {
-    if(identical(dim(e1$x)[1:2], dim(e2))) e2 = as.numeric(e2)
+    if(inherits(e2, "static")) e2 = e2$x
+    # this only checks 2D, need to extend to 3D.
+    if(is.matrix(e2)) {
+      if(!identical(dim(e1$x)[1:2], dim(e2))) {
+        stop("Dimensions of both objects are not compatible.")
+      }
+      e2 = as.numeric(e2)
+    }
     e1$x = get(.Generic, mode="function")(e1$x, e2)
     return(e1)
   }
@@ -86,7 +95,7 @@ Ops.gts = function(e1, e2) {
   if(!ok3) stop(gettextf("Input 'gts' objects dimensions not compatible for '%s'.",
                          .Generic), domain = NA)
   # Finally, we make the operation over the arrays.
-  # Currently, we're not checking the time is identical, must do?
+  # Currently, we're not checking the time is identical, must do? YES! TODO.
   e1$x = get(.Generic, mode="function")(e1$x, e2$x)
   # This is not needed, but just in case :)
   e1$info$climatology = is_climatology(e1) & is_climatology(e2)
@@ -201,8 +210,7 @@ names.gts = function(x) {
   return(c(x$info$varid, x$info$long_name))
 }
 
-#' @export
-'names<-.gts' = function(x, value) {
+setnames_gts = function(x, value) {
 
   if(any(is.na(value))) stop("NAs are not allowed in names for a gts object.")
   if(length(value)>2) stop("A maximum of two values (varid, long_name) must be provided.")
@@ -216,13 +224,14 @@ names.gts = function(x) {
 }
 
 #' @export
+'names<-.gts' = setnames_gts
+
+#' @export
 units.gts = function(x) {
   return(tail(x$info$units, 1))
 }
 
-# generic implemented in base.
-#' @export
-'units<-.gts' = function(x, value) {
+setunits_gts = function(x, value) {
 
   if(length(value)!=1) stop("Only one value for units must be provided.")
 
@@ -233,6 +242,9 @@ units.gts = function(x) {
   x
 
 }
+# generic implemented in base.
+#' @export
+'units<-.gts' = setunits_gts
 
 #' @export
 str.gts = function(object, ...) {

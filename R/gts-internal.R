@@ -21,3 +21,4 @@ logistic = function(x) 1/(1 + exp(-x))
   tmp = 0*target + object
   return(as.numeric(tmp$x))
 }
+

@@ -33,6 +33,11 @@ regrid_gts = function(object, grid, method="bilinear", extrap=FALSE, control=lis
 
   if(is.null(control$verbose)) control$verbose = FALSE
 
+  pm = attr(longitude(grid), "pm")
+  if(attr(longitude(object), "pm") != pm) {
+    longitude(object) = longitude(object, pm)
+  }
+
   if(inherits(grid, "gts") | inherits(grid, "static")) {
     if(method=="fill")
       mask(grid) = mask(grid) # needed to fill the grid mask

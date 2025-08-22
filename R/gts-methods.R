@@ -279,7 +279,7 @@ quantile.gts = function(x, probs = seq(0, 1, 0.25), na.rm = TRUE, names = TRUE,
 }
 
 #' @export
-melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
+melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL, short=FALSE) {
 
   time_var = data$info$time_var
   if(is.null(time_var)) time_var = "time"
@@ -291,6 +291,7 @@ melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
                      value=as.numeric(data$x))
 
     names(out)[3:4] = c(time_var, value.name)
+    if(isTRUE(short)) names(out)[1:2] = c("lon", "lat")
 
   } else {
 
@@ -302,6 +303,7 @@ melt.gts = function(data, ..., na.rm=FALSE, value.name=NULL) {
                      value=as.numeric(data$x))
 
     names(out)[4:5] = c(time_var, value.name)
+    if(isTRUE(short)) names(out)[1:2] = c("lon", "lat")
 
   }
 

@@ -252,12 +252,8 @@ map_details = function(primeMeridian="center", hires=FALSE, col="darkolivegreen4
 #' @examples
 map.axes2 = function(sides=c(1,2), cex.axis=0.75, line=-0.4) {
 
-  .axis.map(sides[1], "lon", las=1, cex.axis=cex.axis, line=line, tick=FALSE)
-  .axis.map(sides[2], "lat", las=1, cex.axis=cex.axis, line=line, tick=FALSE)
-  axis(1, labels=FALSE)
-  axis(2, labels=FALSE)
-  axis(3, labels=FALSE)
-  axis(4, labels=FALSE)
+  for(iside  in sides)
+    .axis.map(iside, las=1, cex.axis=cex.axis, line=line, tick=FALSE)
   box()
 
   return(invisible(NULL))
@@ -291,7 +287,7 @@ map.axes2 = function(sides=c(1,2), cex.axis=0.75, line=-0.4) {
 }
 
 
-.axis.map = function(side, type, usr=NULL, n=5, ...) {
+.axis.map = function(side, usr=NULL, n=5, ...) {
 
   if(is.na(side)) return(invisible())
 
@@ -300,12 +296,19 @@ map.axes2 = function(sides=c(1,2), cex.axis=0.75, line=-0.4) {
   if(is.null(usr)) usr = old_usr
   par(usr=usr)
 
-  is.x <- side%%2 == 1
+  is.x = side%%2 == 1
 
-  x = pretty(usr[if(is.x) 1:2 else 3:4], n=n)
-  xc = checkLongitude(x, "center")
+  this = usr[if(is.x) 1:2 else 3:4]
 
+  x = pretty(this, n=n+2)
+  x = x[which(x > this[1] & x < this[2])]
+  xc = if(is.x) checkLongitude(x, "center") else x
+
+  type = if(is.x) "lon" else "lat"
   axis(side=side, at=x, labels=coord2text(coord=xc, type=type), ...)
+  sides = c(1,3) + !is.x
+  axis(side=sides[1], at=x, labels=FALSE)
+  axis(side=sides[2], at=x, labels=FALSE)
 
   return(invisible(x))
 }

@@ -2,16 +2,22 @@ Package: gts
 Type: Package
 Title: Gridded time series data manipulation and analysis
 Version: 0.2.9019
-Author: Ricardo Oliveros-Ramos
-Maintainer: Ricardo Oliveros-Ramos <ricardo.oliveros@gmail.com>
+Authors@R: 
+    person("Ricardo", "Oliveros-Ramos",
+           email = "ricardo.oliveros@gmail.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8069-2101"))
 Description: Management of gridded time-series (arrays with a time dimension),
     with geographical dimensions (longitude, latitude, depth/altitude). The package provides
     methods to read and write gridded time-series (GTS) objects and manage them using
     R time-series methods. 
-License: GPL-2
+License: GPL-3
 Depends: R (>= 3.5.0)
 Imports: akima,
+         colorful,
          fields,
+         graphics,
+         grDevices,
          lubridate,
          Matrix,
          maps,
@@ -20,15 +26,17 @@ Imports: akima,
          mgcv,
          ncdf4,
          nctools,
+         reshape2,
          sp,
          sf,
-         stats
+         stats,
+         stlplus,
+         utils
 Encoding: UTF-8
 LazyData: TRUE
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Suggests: 
     knitr,
-    reshape2,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

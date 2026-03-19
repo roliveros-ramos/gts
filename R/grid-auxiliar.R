@@ -60,6 +60,10 @@ is_land = function(lon, lat, hires=FALSE){
 #' @inheritParams is_ocean
 is_over = function(lon, lat, layer) {
   
+  if(!inherits(x = layer, what = "sf")){
+    stop("layer must be a POLYGON/MULTIPOLYGON object compatible with sf tools.")
+  }
+  
   coords = data.frame(lon = lon, lat = lat)
   coords = st_as_sf(x = coords, coords = c("lon", "lat"))
   

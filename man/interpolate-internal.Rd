@@ -23,7 +23,7 @@ get_bilinear_weights(x, y, xout, yout, mask = NULL, extrap = FALSE)
 interp(z, x, y, xout, yout, FUN, extrap = FALSE, control = list(), ...)
 }
 \arguments{
-\item{x}{Numeric vector or matrix.}
+\item{x, y}{Input coordinates.}
 
 \item{z}{Input matrix or array.}
 
@@ -42,8 +42,6 @@ either rejected or redistributed depending on `extrap`.}
 \item{control}{Named list of internal control options.}
 
 \item{...}{Additional arguments passed to `FUN`.}
-
-\item{x, y}{Input coordinates.}
 }
 \value{
 A list with components:

@@ -2,9 +2,26 @@
 % Please edit documentation in R/integrate.R
 \name{integrate}
 \alias{integrate}
+\alias{integrate.default}
+\alias{integrate.gts}
 \title{Integrate functions and gridded time-series objects}
 \usage{
 integrate(f, ...)
+
+\method{integrate}{default}(
+  f,
+  lower,
+  upper,
+  ...,
+  subdivisions = 100L,
+  rel.tol = .Machine$double.eps^0.25,
+  abs.tol = rel.tol,
+  stop.on.error = TRUE,
+  keep.xy = FALSE,
+  aux = NULL
+)
+
+\method{integrate}{gts}(f, lower, upper = 0, by = NULL, subdivisions = NULL, ...)
 }
 \arguments{
 \item{f}{For `integrate.default()`, a function to integrate. For
@@ -21,12 +38,24 @@ scalar or an array defining spatially varying lower bounds.}
 scalar or an array defining spatially varying upper bounds. The default is
 `0`.}
 
+\item{subdivisions}{Number of subdivisions used to define the integration
+step size in `integrate.gts()`. This is an alternative to `by`.}
+
+\item{rel.tol}{relative accuracy requested.}
+
+\item{abs.tol}{absolute accuracy requested.}
+
+\item{stop.on.error}{logical. If true (the default) an error stops the
+    function.  If false some errors will give a result with a warning in
+    the \code{message} component.}
+
+\item{keep.xy}{unused.  For compatibility with S.}
+
+\item{aux}{unused.  For compatibility with S.}
+
 \item{by}{Width of the integration interval used by the numerical
 approximation in `integrate.gts()`. If both `by` and `subdivisions` are
 omitted, `by = 1` is used.}
-
-\item{subdivisions}{Number of subdivisions used to define the integration
-step size in `integrate.gts()`. This is an alternative to `by`.}
 }
 \value{
 Depending on the method:

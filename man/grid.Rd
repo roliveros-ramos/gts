@@ -3,9 +3,22 @@
 \name{grid}
 \alias{grid}
 \alias{make_grid}
+\alias{update_grid}
+\alias{read_grid}
 \title{Create or read a spatial grid object}
 \usage{
 make_grid(lon, lat, dx, dy = dx, n = 1, thr = 0.8, hires = FALSE, mask = TRUE)
+
+update_grid(grid, thr)
+
+read_grid(
+  filename,
+  varid = NULL,
+  mask = NULL,
+  create_mask = FALSE,
+  value = FALSE,
+  ...
+)
 }
 \arguments{
 \item{lon, lat}{Horizontal coordinate ranges or vectors used to define a

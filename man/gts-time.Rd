@@ -31,12 +31,7 @@
 \item{...}{Additional arguments passed to the underlying method. For
 `time.gts()`, `frequency.gts()`, `deltat.gts()`, `start.gts()`, `end.gts()`,
 and `cycle.gts()`, these are passed to the corresponding generic. For
-`window.gts()`, they are passed to [stats::window()]. For
-`climatology.gts()`, they are passed to `FUN`.}
-
-\item{FUN}{Aggregation function used by `climatology.gts()`. This can be a
-function or the name of a function. The function is applied over all
-observations belonging to the same cycle.}
+`window.gts()`, they are passed to [stats::window()].}
 }
 \value{
 Depending on the method:
@@ -53,9 +48,6 @@ Depending on the method:
   observation.}
   \item{`window.gts()`}{A subsetted `gts` object with updated data, time
   vector, time metadata, and time breaks.}
-  \item{`climatology.gts()`}{A `gts` object representing a climatological
-  cycle.}
-  \item{`climatology()`}{The result of the selected method.}
 }
 }
 \description{
@@ -71,9 +63,6 @@ and `cycle.gts()` all delegate to the regular `ts` object stored in
 time-series representation and updates the data array, time metadata, and
 time breaks accordingly.
 
-`climatology.gts()` aggregates the last dimension of the data array by cycle
-and returns a climatological `gts` object.
-
 
 These methods operate on the regular time-series representation stored in
 `x$info$ts`, not directly on `x$time`. In particular, `time.gts()` returns
@@ -84,14 +73,6 @@ the regular numeric time scale of the underlying `ts` object, whereas
 [stats::window()]. It therefore expects `start`, `end`, and related
 arguments on the regular time scale of `x$info$ts`. Date or character
 expansion is not currently implemented.
-
-`climatology.gts()` groups observations by `cycle(x)` and applies `FUN` to
-each group. For three-dimensional objects, aggregation is done over the last
-dimension at each horizontal grid cell. For four-dimensional objects,
-aggregation is done at each horizontal grid cell and depth level. The
-returned object keeps the `gts` structure but replaces the time axis by cycle
-values, stores mean original time labels by cycle, resets `info$ts` to a
-cycle-based `ts` object starting at `0`, and sets `info$climatology = TRUE`.
 }
 \section{Functions}{
 \itemize{

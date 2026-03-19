@@ -2,9 +2,32 @@
 % Please edit documentation in R/gts-constructors.R
 \name{gts}
 \alias{gts}
+\alias{gts.ncdf4}
+\alias{gts.array}
+\alias{read_gts}
 \title{Create a gridded time-series object}
 \usage{
 gts(x, ...)
+
+\method{gts}{ncdf4}(x, varid = NULL, climatology = FALSE, control = list(), ...)
+
+\method{gts}{array}(
+  x,
+  varid = NULL,
+  grid,
+  data = NA,
+  start = 1,
+  end = numeric(),
+  frequency = 1,
+  deltat = 1,
+  climatology = FALSE,
+  long_name = NULL,
+  unit = NULL,
+  control = list(),
+  ...
+)
+
+read_gts(filename, varid = NULL, control = list(), ...)
 }
 \arguments{
 \item{x}{For `gts()`, either:
@@ -18,34 +41,14 @@ dimension is time.
 \item{...}{Additional arguments passed to the method-specific constructor.
 For array input, these are forwarded to [stats::ts()].}
 
-\item{filename}{Path to a netCDF file to read with `read_gts()`.}
-
 \item{varid}{Variable identifier. For netCDF input this is the variable name
 in the file. If omitted, the constructor tries to identify a single
 suitable variable with more than two dimensions.}
-
-\item{grid}{Grid definition for array input. This must be a `grid` object, or
-a `gts` object from which the grid is extracted.}
-
-\item{data}{Currently ignored. Retained for compatibility with the current
-method signature.}
-
-\item{start, end}{Time-series start and end for array input. These are passed
-to [stats::ts()] to construct the time index. They may be given as numeric
-values or as vectors of length two in the usual `ts` style.}
-
-\item{frequency, deltat}{Sampling frequency or time step for array input. If
-`frequency` is missing it is computed as `1 / deltat`. If `deltat` is
-missing it is computed as `1 / frequency`.}
 
 \item{climatology}{Logical; if `TRUE`, treat the data as a climatological
 cycle. For array input, this sets `frequency` to the length of the time
 dimension and resets `start` to `0`. For netCDF input, the flag is kept
 only when the length of the time axis matches the inferred frequency.}
-
-\item{long_name}{Optional human-readable variable name for array input.}
-
-\item{unit}{Optional unit string for the data variable in array input.}
 
 \item{control}{A named list of control options.
 
@@ -70,6 +73,26 @@ only when the length of the time axis matches the inferred frequency.}
 
   Additional entries may be used by helper functions called during grid
   construction, notably [fill()].}
+
+\item{grid}{Grid definition for array input. This must be a `grid` object, or
+a `gts` object from which the grid is extracted.}
+
+\item{data}{Currently ignored. Retained for compatibility with the current
+method signature.}
+
+\item{start, end}{Time-series start and end for array input. These are passed
+to [stats::ts()] to construct the time index. They may be given as numeric
+values or as vectors of length two in the usual `ts` style.}
+
+\item{frequency, deltat}{Sampling frequency or time step for array input. If
+`frequency` is missing it is computed as `1 / deltat`. If `deltat` is
+missing it is computed as `1 / frequency`.}
+
+\item{long_name}{Optional human-readable variable name for array input.}
+
+\item{unit}{Optional unit string for the data variable in array input.}
+
+\item{filename}{Path to a netCDF file to read with `read_gts()`.}
 }
 \value{
 A `gts` object. This is a list-like object with components:

@@ -83,12 +83,6 @@ interpolated profile evaluated at regularly spaced points between the bounds.
 crossing of interest. It identifies the interval where `y` crosses `ref` and
 returns the corresponding coordinate by linear interpolation.
 }
-\section{Functions}{
-\itemize{
-\item \code{locate()}: Locate where a profile crosses a reference
-value.
-
-}}
 \examples{
 \dontrun{
 zint <- vertical_integration(arr, lower = -200, upper = 0, dim = depth)

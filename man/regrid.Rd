@@ -2,23 +2,156 @@
 % Please edit documentation in R/regrid.R
 \name{regrid}
 \alias{regrid}
-\title{Regridding}
+\alias{regrid,gts,gts-method}
+\alias{regrid,gts,static-method}
+\alias{regrid,gts,grid-method}
+\alias{regrid,static,gts-method}
+\alias{regrid,static,static-method}
+\alias{regrid,static,grid-method}
+\title{Regrid a gridded object to a new spatial grid}
 \usage{
 regrid(object, grid, ...)
+
+\S4method{regrid}{gts,gts}(
+  object,
+  grid,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
+
+\S4method{regrid}{gts,static}(
+  object,
+  grid,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
+
+\S4method{regrid}{gts,grid}(
+  object,
+  grid,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
+
+\S4method{regrid}{static,gts}(
+  object,
+  grid,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
+
+\S4method{regrid}{static,static}(
+  object,
+  grid,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
+
+\S4method{regrid}{static,grid}(
+  object,
+  grid,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
 }
 \arguments{
-\item{object}{The object}
+\item{object}{A `gts` or `static` object containing gridded data to be
+regridded.}
 
-\item{grid}{The grid}
+\item{grid}{Target grid definition. This can be a `grid` object, or a `gts`
+or `static` object from which the grid definition is extracted.}
 
-\item{...}{Additional arguments}
+\item{...}{Additional arguments passed to the underlying interpolation
+helpers.}
+
+\item{method}{Interpolation method. Supported methods in the current
+implementation are `"bilinear"`, `"nearest"`, and `"fill"`. If `NULL`,
+`"bilinear"` is used.}
+
+\item{extrap}{Logical; if `TRUE`, allow extrapolation outside the source grid
+when supported by the selected method.}
+
+\item{control}{A named list of control options. Common entries include:
+\describe{
+\item{`use_mask`}{Logical; if `TRUE` (default), use the source mask when
+available.}
+\item{`mask`}{Optional mask to use during interpolation. If omitted and
+`use_mask = TRUE`, the mask of `object` is used.}
+\item{`verbose`}{Logical; if `TRUE`, report progress messages.}
+\item{`maxit`, `reltol`, `abstol`}{Control parameters used by
+`method = "fill"` to iteratively reduce masked gaps before the final
+bilinear interpolation.}
+}}
 }
 \value{
-A regrided object
+An object of the same class as `object`, regridded to the spatial
+  grid defined by `grid`. The data component `x` is interpolated to the new
+  grid, and the corresponding spatial metadata are updated accordingly.
 }
 \description{
-Regridding
+`regrid()` interpolates the spatial dimensions of a `gts` or `static` object
+to a target grid while preserving any trailing non-spatial dimensions. The
+target grid can be supplied directly as a `grid` object, or extracted from a
+`gts` or `static` object.
 }
-\examples{
-regrid(object, grid)
+\details{
+This is a higher-level wrapper around the package interpolation machinery for
+classed gridded objects.
+
+
+`regrid()` uses the spatial coordinates stored in `object` and interpolates
+the data component `object$x` to the spatial geometry defined by `grid`.
+
+When `grid` is itself a `gts` or `static` object, only its grid definition is
+used. If needed, longitudes are first converted to the prime meridian
+convention of the target grid.
+
+`method = "fill"` performs an iterative pre-filling step on the source grid by
+repeatedly applying bilinear interpolation with extrapolation enabled. This is
+used to reduce masked gaps before carrying out the final bilinear regridding
+to the target grid.
+
+If the target grid has a mask, it is applied to the interpolated result after
+regridding.
+
+Only regular and irregular grids are supported by `regrid()`. Point-data
+inputs are not supported.
+
+The returned object has the same class as `object`, with updated grid,
+longitude, latitude, breaks, and metadata fields consistent with the target
+grid.
+}
+\section{Methods (by class)}{
+\itemize{
+\item \code{regrid(object = gts, grid = gts)}: Regrid a `gts` object to the grid carried by another
+`gts` object.
+
+\item \code{regrid(object = gts, grid = static)}: Regrid a `gts` object to the grid carried by a `static`
+object.
+
+\item \code{regrid(object = gts, grid = grid)}: Regrid a `gts` object to a `grid` object.
+
+\item \code{regrid(object = static, grid = gts)}: Regrid a `static` object to the grid carried by a `gts`
+object.
+
+\item \code{regrid(object = static, grid = static)}: Regrid a `static` object to the grid carried by another
+`static` object.
+
+\item \code{regrid(object = static, grid = grid)}: Regrid a `static` object to a `grid` object.
+
+}}
+\seealso{
+[interpolate()]
 }

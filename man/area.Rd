@@ -2,18 +2,86 @@
 % Please edit documentation in R/area.R
 \name{area}
 \alias{area}
-\title{Calculate the area of every square of a grid}
+\alias{area.grid}
+\alias{area.gts}
+\alias{area.static}
+\title{Compute the area of grid cells}
 \usage{
 area(x, ...)
+
+\method{area}{grid}(x, units = NULL, ...)
+
+\method{area}{gts}(x, units = NULL, ...)
+
+\method{area}{static}(x, units = NULL, ...)
 }
 \arguments{
-\item{x}{A grid, linear o curvilinear.}
+\item{x}{A `grid`, `gts`, or `static` object.}
 
-\item{...}{Additional parameters for grid computation.}
+\item{...}{Additional arguments passed to the method.}
+
+\item{units}{Character string giving the output area units. Supported values
+are `"km2"`, `"m2"`, and `"cm2"`. If omitted, the current implementation
+defaults to `"km2"` when the area is computed.}
 }
 \value{
-A matrix, with the area of each square of the grid.
+Depending on the method:
+\describe{
+  \item{`area.grid()`}{A numeric matrix with the area of each grid cell, or
+  `NULL` when the required `psi` coordinates are not available.}
+  \item{`area.gts()`}{A numeric matrix with the area of each cell of the
+  associated grid, or `NULL` when the required `psi` coordinates are not
+  available.}
+  \item{`area.static()`}{A numeric matrix with the area of each cell of the
+  associated grid, or `NULL` when the required `psi` coordinates are not
+  available.}
+}
 }
 \description{
-Calculate the area of every square of a grid
+`area()` computes the horizontal area of each cell in a spatial grid.
+}
+\details{
+For `grid` objects, the method returns a matrix with the area of each grid
+cell. For `gts` and `static` objects, the calculation is delegated to the
+associated grid.
+
+When an area matrix is already stored in a `grid` object and no output units
+are requested, that cached matrix is returned directly.
+
+
+`area.grid()` computes cell area from the `psi` grid coordinates stored in the
+object. The calculation uses the corner geometry defined by `x$psi$LON` and
+`x$psi$LAT`, together with the latitude-dependent cosine correction used in
+the current implementation.
+
+If `x$area` is already available and `units` is `NULL`, the stored matrix is
+returned unchanged.
+
+If the `psi` grid is missing, the low-level area calculation currently returns
+`NULL`.
+
+`area.gts()` and `area.static()` are convenience methods that apply `area()`
+to `x$grid`.
+}
+\section{Methods (by class)}{
+\itemize{
+\item \code{area(grid)}: Compute the area of each cell of a `grid` object.
+
+\item \code{area(gts)}: Compute the area of the cells of the grid associated with a
+`gts` object.
+
+\item \code{area(static)}: Compute the area of the cells of the grid associated with a
+`static` object.
+
+}}
+\examples{
+\dontrun{
+a1 <- area(grd)
+a2 <- area(grd, units = "m2")
+a3 <- area(x)
+a4 <- area(bathy)
+}
+}
+\seealso{
+[grid-class], [gts-class], [static-class], [make_grid()], [fill()]
 }

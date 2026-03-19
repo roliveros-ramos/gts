@@ -2,15 +2,26 @@
 % Please edit documentation in R/gts-auxiliar.R
 \name{compact_gam}
 \alias{compact_gam}
-\title{Reduce the object of a GAM object by eliminating caller environment references}
+\title{Compact a GAM or GLM object}
 \usage{
 compact_gam(object, ...)
 }
 \arguments{
-\item{object}{A GAM or GLM object}
+\item{object}{A fitted model object inheriting from `"glm"`, including GAM
+objects.}
 
-\item{...}{Additional arguments}
+\item{...}{Additional unused arguments.}
+}
+\value{
+A compacted object of the same class as `object`.
 }
 \description{
-Reduce the object of a GAM object by eliminating caller environment references
+`compact_gam()` removes selected stored components and environment references
+from a fitted model object in order to reduce its size.
+}
+\details{
+The function removes several heavy components, such as stored model data,
+fitted values, residuals, weights, offsets, and selected internal matrices.
+It also resets some stored environments to reduce references to the caller
+environment.
 }

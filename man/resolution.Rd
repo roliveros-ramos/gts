@@ -2,18 +2,55 @@
 % Please edit documentation in R/resolution.R
 \name{resolution}
 \alias{resolution}
-\title{Compute the spatial resolution of a grid}
+\alias{resolution.default}
+\title{Compute the spatial resolution of a gridded object}
 \usage{
 resolution(x, ...)
+
+\method{resolution}{default}(x, ...)
 }
 \arguments{
-\item{x}{A gridded object, gts, static or grid.}
+\item{x}{A gridded object providing `longitude()` and `latitude()` methods,
+such as a `gts`, `static`, or `grid` object.}
 
-\item{...}{Additional parameters for computation.}
+\item{...}{Additional arguments passed to the method.}
 }
 \value{
-The spatial resolution.
+`resolution()` returns an object of class `"gts.resolution"`, implemented as
+a list with components:
+\describe{
+  \item{`dx`}{Unique longitude spacings.}
+  \item{`dy`}{Unique latitude spacings.}
+}
+
+For regular grids, `dx` and `dy` typically each contain a single value. For
+grids with varying spacing, they may contain several values.
 }
 \description{
-Compute the spatial resolution of a grid
+`resolution()` computes the horizontal spatial resolution of a gridded object
+from its longitude and latitude coordinates.
+}
+\details{
+The default method computes successive differences in longitude and latitude,
+rounds them to 12 decimal places, and returns the unique values found in each
+direction. This allows both regular grids, with a single resolution value per
+axis, and irregular grids, with varying spacing, to be summarised.
+
+Objects returned by `resolution()` have class `"gts.resolution"` and can be
+printed with a dedicated method.
+}
+\section{Methods (by class)}{
+\itemize{
+\item \code{resolution(default)}: Compute the spatial resolution from longitude and
+latitude coordinates.
+
+}}
+\examples{
+\dontrun{
+r <- resolution(x)
+print(r)
+}
+}
+\seealso{
+[print.gts.resolution()], [longitude()], [latitude()]
 }

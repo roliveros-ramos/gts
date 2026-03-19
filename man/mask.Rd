@@ -8,7 +8,8 @@
 \alias{mask.array}
 \alias{mask.matrix}
 \alias{mask<-}
-\title{Extract, create or assign ocean/land masks.}
+\alias{mask<-.gts}
+\title{Extract, create, or assign spatial masks}
 \usage{
 mask(x, ...)
 
@@ -23,27 +24,112 @@ mask(x, ...)
 \method{mask}{matrix}(x, ...)
 
 mask(x) <- value
+
+\method{mask}{gts}(x) <- value
 }
 \arguments{
-\item{x}{An object containing a mask.}
+\item{x}{An object from which to extract or derive a mask.}
 
-\item{...}{Additional arguments, currently not used.}
+\item{...}{Additional arguments passed to the method.}
 
-\item{n}{Number of internal points used to calculate the mask.}
+\item{n}{Number of internal points per grid cell used when creating a
+coastline-based mask for a `grid` object.}
 
-\item{thr}{Threshold to assign a point to the ocean.}
+\item{thr}{Threshold between `0` and `1` used to convert the ocean- or
+land-proportion surface to a binary mask when creating a mask from a
+`grid` object.}
 
-\item{hires}{Boolean, use high-resolution coastline?}
+\item{hires}{Logical; if `TRUE`, use the high-resolution coastline when
+creating a mask from a `grid` object.}
 
-\item{ocean}{Boolean, are valid points in the ocean? Default is TRUE. FALSE for land.}
+\item{ocean}{Logical; if `TRUE`, valid cells are interpreted as ocean cells.
+If `FALSE`, valid cells are interpreted as land cells.}
 
-\item{object}{The object to add or replace the mask.}
-
-\item{mask}{A mask.}
+\item{value}{A mask to assign to an object.}
 }
 \value{
-The mask.
+Depending on the method:
+\describe{
+  \item{`mask.grid()`}{A spatial mask matrix, usually with `1` for valid
+  cells and `NA` for excluded cells.}
+  \item{`mask.gts()`}{The stored grid mask when available, otherwise a mask
+  derived from the data array, or `NULL` when automatic derivation is not
+  supported.}
+  \item{`mask.static()`}{The stored grid mask when available, otherwise a
+  mask derived from the data, or `NULL` when automatic derivation is not
+  supported.}
+  \item{`mask.array()`}{A numeric matrix with `1` for cells containing at
+  least one non-missing value across the third dimension and `0` otherwise.}
+  \item{`mask.matrix()`}{A numeric matrix with `1` for non-missing cells and
+  `0` for missing cells.}
+  \item{`mask<-.gts()`}{The modified `gts` object.}
+}
 }
 \description{
-Extract, create or assign ocean/land masks.
+`mask()` extracts or derives a spatial mask from gridded objects and arrays.
+}
+\details{
+For `grid`, `gts`, and `static` objects, the function first returns an
+existing mask when one is already stored in the object. Otherwise, it tries to
+derive a mask from the available data or, for `grid` objects, to create one
+from coastline geometry.
+
+`mask<-` assigns a new mask to an object. In the current implementation, a
+replacement method is provided for `gts` objects.
+
+
+For `grid` objects, `mask.grid()` returns `x$mask` when available. Otherwise,
+it creates a coastline-based mask using the grid geometry. The returned mask
+is typically a matrix with `1` for valid cells and `NA` for excluded cells.
+
+For `gts` objects, `mask.gts()` returns `x$grid$mask` when available.
+Otherwise, it attempts to derive a mask from the underlying data array
+`x$x`. This automatic derivation currently relies on the array method and is
+therefore intended for three-dimensional arrays.
+
+For `static` objects, `mask.static()` returns `x$grid$mask` when available.
+Otherwise, it drops redundant dimensions and attempts to derive a mask from
+the data. Automatic derivation is currently supported only for two-dimensional
+static matrices.
+
+For arrays, `mask.array()` drops redundant dimensions and derives a mask by
+checking whether each spatial cell contains at least one non-missing value
+across the third dimension. This is currently supported only for
+three-dimensional arrays.
+
+For matrices, `mask.matrix()` returns `1` for non-missing cells and `0` for
+missing cells.
+
+`mask<-.gts()` replaces the mask stored in `x$grid$mask`.
+}
+\section{Methods (by class)}{
+\itemize{
+\item \code{mask(grid)}: Extract or create a mask from a `grid` object.
+
+\item \code{mask(gts)}: Extract or derive a mask from a `gts` object.
+
+\item \code{mask(static)}: Extract or derive a mask from a `static` object.
+
+\item \code{mask(array)}: Derive a mask from a three-dimensional array.
+
+\item \code{mask(matrix)}: Derive a mask from a matrix.
+
+}}
+\section{Functions}{
+\itemize{
+\item \code{mask(gts) <- value}: Replace the mask stored in a `gts` object.
+
+}}
+\examples{
+\dontrun{
+m1 <- mask(grd)
+m2 <- mask(x)
+m3 <- mask(bathy)
+
+mask(x) <- m1
+}
+}
+\seealso{
+[grid-class], [gts-class], [static-class], [make_grid()],
+  [update_grid()]
 }

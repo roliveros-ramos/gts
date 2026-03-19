@@ -2,40 +2,127 @@
 % Please edit documentation in R/interpolate.R
 \name{interpolate}
 \alias{interpolate}
-\title{Interpolation of bivariate data}
+\alias{interpolate.default}
+\title{Interpolate bivariate data on grids or point locations}
 \usage{
 interpolate(x, y, z, ...)
+
+\method{interpolate}{default}(
+  x,
+  y,
+  z,
+  xout,
+  yout,
+  method = "bilinear",
+  extrap = FALSE,
+  control = list(),
+  ...
+)
 }
 \arguments{
-\item{x}{x input}
+\item{x, y}{Coordinates describing the input data. Supported input formats are:
+\itemize{
+\item a regular grid, given as increasing numeric vectors, with
+`dim(z)[1:2] == c(length(x), length(y))`;
+\item an irregular grid, given as numeric matrices with the same dimensions
+as `z`;
+\item point data, given as numeric vectors of the same length as `z`.
+}}
 
-\item{y}{y input}
+\item{z}{Numeric values to interpolate. `z` must be a matrix for a single
+spatial field, or an array whose first two dimensions match the spatial
+dimensions implied by `x` and `y`.}
 
-\item{z}{z input}
+\item{...}{Additional arguments passed to the underlying interpolation helper.}
 
-\item{...}{Additional arguments}
+\item{xout, yout}{Coordinates of the target locations. Supported output formats
+are:
+\itemize{
+\item a regular grid, given as increasing numeric vectors;
+\item an irregular grid, given as numeric matrices of identical dimensions;
+\item paired point locations, given as numeric vectors of equal length.
+}}
 
-\item{xout}{x output}
+\item{method}{Interpolation method. Currently supported methods in the shared
+implementation are `"bilinear"`, `"nearest"`, and `"akima"`. Not all methods
+support all combinations of input and output geometry; see \strong{Details}.}
 
-\item{yout}{y output}
+\item{extrap}{Logical; if `TRUE`, allow extrapolation outside the input domain
+when supported by the selected method. If `FALSE`, unsupported target
+locations are returned as `NA`.}
 
-\item{method}{The method}
-
-\item{extrap}{Do you want to extrapolate outside the convex-hull of your data?}
-
-\item{control}{Control arguments}
+\item{control}{A named list of method-specific control options. Common entries
+include:
+\describe{
+\item{`mask`}{Optional mask used by bilinear interpolation. Values equal to
+`0` are treated as missing.}
+\item{`link`}{Optional link function name used to transform `z` before
+interpolation and back-transform it afterwards via [stats::gaussian()].}
+\item{`linear`}{Logical; for `"akima"` interpolation, request linear rather
+than Akima interpolation.}
+}
+Additional named entries are passed to the underlying Akima routines; see
+\strong{Details}.}
 }
 \value{
-A list
+A list with components:
+\describe{
+  \item{`x`, `y`}{The requested output coordinates, returned in the same form as
+  supplied by `xout` and `yout`.}
+  \item{`z`}{Interpolated values. For regular-grid output this is typically a
+  matrix of dimension `length(xout) x length(yout)`. For irregular-grid output,
+  it has `dim(xout)`. If the input `z` has additional trailing dimensions, they
+  are preserved after the two spatial dimensions.}
+}
 }
 \description{
-Interpolation of bivariate data
+`interpolate()` provides a unified interface for interpolating two-dimensional
+data from regular grids, irregular grids, or point locations to new spatial
+locations. The default method is `"bilinear"`.
+}
+\details{
+The function accepts a spatial field as a matrix, or a higher-dimensional array
+whose first two dimensions represent space. When `z` has additional trailing
+dimensions, interpolation is applied independently to each layer and the extra
+dimensions are preserved in the output.
+
+
+Inputs are classified internally as one of three spatial data layouts:
+regular grids, irregular grids, or point data.
+
+Missing values in gridded inputs are handled differently depending on the
+interpolation method. For Akima-based interpolation, complete cases are
+extracted and treated as point data. For bilinear and nearest-neighbour
+interpolation, support is currently limited to regular-grid origins.
+
+In the current implementation:
+\itemize{
+\item `"bilinear"` is implemented for regular-grid origins and regular-grid or
+irregular-grid targets;
+\item `"nearest"` is implemented for regular-grid origins and regular-grid or
+irregular-grid targets;
+\item `"akima"` supports regular grids, irregular grids, and point data, and is
+the method that most clearly supports paired point output;
+\item bilinear and nearest-neighbour interpolation are not implemented for
+irregular-grid or point-data origins.
+}
+
+For Akima-based interpolation, `control` may include arguments used by the
+underlying Akima routines, such as `duplicate`, `dupfun`, `nx`, `ny`,
+`jitter`, `jitter.iter`, `jitter.random`, and `remove`.
 }
 \examples{
+\dontrun{
 data(volcano)
-x = seq(from=0, to=1, length.out = nrow(volcano))
-y = seq(from=0, to=1, length.out = ncol(volcano))
-xout = seq(from=0, to=1, length.out = 3*nrow(volcano))
-yout = seq(from=0, to=1, length.out = 3*ncol(volcano))
-zout = interpolate(x, y, volcano, xout, yout)
+x <- seq(0, 1, length.out = nrow(volcano))
+y <- seq(0, 1, length.out = ncol(volcano))
+xout <- seq(0, 1, length.out = 3 * nrow(volcano))
+yout <- seq(0, 1, length.out = 3 * ncol(volcano))
+
+out <- interpolate(x, y, volcano, xout, yout, method = "bilinear")
+str(out)
+}
+}
+\seealso{
+[akima::interp()], [akima::interpp()]
 }

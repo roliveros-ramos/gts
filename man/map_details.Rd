@@ -55,6 +55,8 @@ the same as the interior color. Otherwise this specifies the color to use.}
 
 \item{grid.lwd}{Width of the grid lines.}
 
+\item{cex.axis}{The magnification to be used for axis annotation relative to the current setting of cex.}
+
 \item{fill}{
     logical flag that says whether to draw lines or fill areas.
     If \code{FALSE}, the lines bounding each region will be drawn (but
@@ -85,7 +87,7 @@ the same as the interior color. Otherwise this specifies the color to use.}
 
 \item{labels}{Boolean, add LATITUDE and LONGITUDE labels?}
 
-\item{...}{}
+\item{...}{Additional arguments}
 }
 \description{
 Add details to a map

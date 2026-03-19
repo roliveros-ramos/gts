@@ -2,20 +2,42 @@
 % Please edit documentation in R/coordinates.R
 \name{transform_coordinates}
 \alias{transform_coordinates}
-\title{Transform coordinates between Coordinate Reference Systems (CRS)}
+\title{Transform coordinates between coordinate reference systems}
 \usage{
 transform_coordinates(object, crs_old, crs_new = "EPSG:4326")
 }
 \arguments{
-\item{object}{A two-column matrix with 'x' (~longitude) and 'y' (~latitude) coordinates as columns.}
+\item{object}{A two-column matrix- or data-frame-like object containing
+coordinates. The first column is interpreted as `x` and the second as `y`.}
 
-\item{crs_old}{Original CRS of the coordinates.}
+\item{crs_old}{Original CRS of the coordinates. This is passed to `sf` when
+constructing the input geometry.}
 
-\item{crs_new}{New CRS of the output.}
+\item{crs_new}{Target CRS of the transformed coordinates. The default is
+`"EPSG:4326"`.}
 }
 \value{
-A data.frame with 'x' and 'y' coordinates in the new CRS.
+A `data.frame` with columns `x` and `y` giving the transformed
+  coordinates.
 }
 \description{
-Transform coordinates between Coordinate Reference Systems (CRS)
+`transform_coordinates()` transforms a set of two-dimensional coordinates
+from one coordinate reference system (CRS) to another using `sf`.
+}
+\details{
+The function converts each coordinate pair to an `sf` point geometry,
+constructs a simple-feature geometry set with the supplied input CRS, and
+transforms it to `crs_new` with [sf::st_transform()].
+
+The returned coordinates are provided as a plain `data.frame` with columns
+`x` and `y`.
+}
+\examples{
+\dontrun{
+pts <- data.frame(x = c(-75, -74), y = c(-12, -11))
+transform_coordinates(pts, crs_old = "EPSG:4326", crs_new = "EPSG:3857")
+}
+}
+\seealso{
+[longitude()], [latitude()], [sf::st_transform()]
 }

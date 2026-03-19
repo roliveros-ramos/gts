@@ -6,7 +6,7 @@
 \alias{fill.array}
 \alias{fill.grid}
 \alias{fill.gts}
-\title{Fill missing values in an array}
+\title{Fill missing values in gridded objects}
 \usage{
 fill(x, ...)
 
@@ -19,17 +19,80 @@ fill(x, ...)
 \method{fill}{gts}(x, method = "akima", control = list(), ...)
 }
 \arguments{
-\item{x}{A matrix or a supported array (e.g. a gts::gts object).}
+\item{x}{An object to fill. Supported inputs include:
+\itemize{
+\item a numeric matrix;
+\item a numeric array whose first two dimensions are spatial;
+\item a `grid` object;
+\item a `gts` object.
+}}
 
-\item{...}{Additional arguments, currently ignored.}
+\item{...}{Additional arguments passed to the underlying interpolation
+machinery.}
 
-\item{method}{The interpolation method used, currently only 'akima' available.}
+\item{method}{Interpolation method used to fill missing values. In the current
+implementation, only `"akima"` should be considered supported.}
 
-\item{control}{Additional control argument passed to the interpolation method.}
+\item{control}{A named list of control options. Supported entries include:
+\describe{
+\item{`mask`}{Optional mask used to identify cells that should not trigger
+filling. If all non-masked cells are already complete, the input is returned
+unchanged.}
+\item{`keep_range`}{Logical; if `TRUE`, interpolated values outside the
+observed range of the original data are discarded and remain `NA`.}
+\item{`create_psi`}{Logical; for `grid` objects, controls whether a missing
+`psi` grid should be created. By default, this is enabled for regular grids.}
+\item{`padding`}{Currently accepted but not used by the shared
+implementation.}
+}}
 }
 \value{
-The array without missing values.
+An object of the same general type as `x`:
+\describe{
+  \item{matrix input}{A matrix with missing values replaced where possible.}
+  \item{array input}{An array of the same dimensions as `x`, with filling
+  applied independently to each spatial layer.}
+  \item{`grid` input}{A `grid` object, potentially with a completed `psi`
+  component.}
+  \item{`gts` input}{A `gts` object with its grid and data component filled,
+  subject to the grid mask when present.}
+}
 }
 \description{
-Fill missing values in an array
+`fill()` replaces missing values in matrices, arrays, and supported gridded
+package classes by interpolating from neighbouring values.
+}
+\details{
+For plain matrices, interpolation is performed on the matrix index space using
+row and column positions. For higher-dimensional arrays, filling is applied
+independently to each layer beyond the first two dimensions. For `grid` and
+`gts` objects, the method also updates associated spatial grid components.
+
+
+The default method fills missing values in a matrix by interpolating over the
+matrix row and column indices. Existing non-missing values are left unchanged.
+
+For arrays, `fill()` is applied independently over all trailing dimensions,
+assuming that the first two dimensions represent space.
+
+For `grid` objects, the function first calls `interp_grid()` and then ensures
+that the `psi` grid is available. For regular grids, `psi` is constructed by
+extending the longitude and latitude boundaries and averaging adjacent cell
+corners. For irregular grids, missing `psi` coordinates are padded, filled,
+and then smoothed with `roll()`.
+
+For `gts` objects, the function first fills the associated grid, then fills
+the data array stored in `x$x`. If a grid mask is available, it is used during
+filling and re-applied afterwards with `.mask_correction()`.
+}
+\examples{
+\dontrun{
+x <- volcano
+x[10:15, 12:18] <- NA
+
+xf <- fill(x)
+}
+}
+\seealso{
+[interpolate()]
 }

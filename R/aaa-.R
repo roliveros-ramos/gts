@@ -7,8 +7,6 @@ NULL
 #' @importFrom fields poly.image image.plot interp.surface.grid tim.colors
 #' imageplot.info imageplot.setup
 NULL
-#' @importFrom maptools map2SpatialPolygons
-NULL
 #' @importFrom lubridate yday<- year month ymd leap_year parse_date_time period
 #' ceiling_date floor_date ymd_hms days_in_month parse_date_time
 #' days_in_month seconds

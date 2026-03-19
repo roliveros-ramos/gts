@@ -87,8 +87,6 @@
 #' requested output corresponds to a regular grid, an irregular grid, or paired
 #' point locations.
 #'
-#' @param x,y Output coordinates supplied to [interpolate()].
-#'
 #' @return A list with a single component `case`, a named logical vector with
 #'   entries `is_gridR`, `is_gridI`, and `is_point`.
 #' @rdname interpolate-internal
@@ -126,7 +124,6 @@
 #' `monot()` checks whether a vector is strictly increasing, or whether all rows
 #' or columns of a matrix are strictly increasing.
 #'
-#' @param x Numeric vector or matrix.
 #' @param side Margin over which monotonicity is checked for matrix inputs.
 #'
 #' @return Logical scalar.

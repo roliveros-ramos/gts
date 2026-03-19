@@ -11,18 +11,11 @@
 #' time-series representation and updates the data array, time metadata, and
 #' time breaks accordingly.
 #'
-#' `climatology.gts()` aggregates the last dimension of the data array by cycle
-#' and returns a climatological `gts` object.
-#'
 #' @param x A `gts` object.
-#' @param FUN Aggregation function used by `climatology.gts()`. This can be a
-#'   function or the name of a function. The function is applied over all
-#'   observations belonging to the same cycle.
 #' @param ... Additional arguments passed to the underlying method. For
 #'   `time.gts()`, `frequency.gts()`, `deltat.gts()`, `start.gts()`, `end.gts()`,
 #'   and `cycle.gts()`, these are passed to the corresponding generic. For
-#'   `window.gts()`, they are passed to [stats::window()]. For
-#'   `climatology.gts()`, they are passed to `FUN`.
+#'   `window.gts()`, they are passed to [stats::window()].
 #'
 #' @details
 #' These methods operate on the regular time-series representation stored in
@@ -35,13 +28,6 @@
 #' arguments on the regular time scale of `x$info$ts`. Date or character
 #' expansion is not currently implemented.
 #'
-#' `climatology.gts()` groups observations by `cycle(x)` and applies `FUN` to
-#' each group. For three-dimensional objects, aggregation is done over the last
-#' dimension at each horizontal grid cell. For four-dimensional objects,
-#' aggregation is done at each horizontal grid cell and depth level. The
-#' returned object keeps the `gts` structure but replaces the time axis by cycle
-#' values, stores mean original time labels by cycle, resets `info$ts` to a
-#' cycle-based `ts` object starting at `0`, and sets `info$climatology = TRUE`.
 #'
 #' @return
 #' Depending on the method:
@@ -58,9 +44,6 @@
 #'   observation.}
 #'   \item{`window.gts()`}{A subsetted `gts` object with updated data, time
 #'   vector, time metadata, and time breaks.}
-#'   \item{`climatology.gts()`}{A `gts` object representing a climatological
-#'   cycle.}
-#'   \item{`climatology()`}{The result of the selected method.}
 #' }
 #'
 #' @seealso [gts-class], [is_climatology()], [gridded-summary],

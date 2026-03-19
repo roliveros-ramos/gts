@@ -129,7 +129,7 @@ gts = function(x, ...) {
   UseMethod("gts")
 }
 
-#' @describeIn gts Create a `gts` object from an open `ncdf4` handle.
+#' @rdname gts
 #' @export
 gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
 
@@ -389,7 +389,7 @@ gts.ncdf4 = function(x, varid=NULL, climatology=FALSE, control=list(), ...) {
 
 
 
-#' @describeIn gts Create a `gts` object from an array and an existing grid.
+#' @rdname gts
 #' @export
 gts.array = function(x, varid=NULL, grid, data = NA, start = 1, end=numeric(),
                      frequency = 1, deltat = 1, climatology=FALSE, long_name=NULL,
@@ -539,8 +539,7 @@ gts.array = function(x, varid=NULL, grid, data = NA, start = 1, end=numeric(),
 
 }
 
-#' @describeIn gts Read a variable from a netCDF file into a `gts` object.
-#' @param filename Path to a netCDF file.
+#' @rdname gts
 #' @export
 read_gts = function(filename, varid=NULL, control=list(), ...) {
 

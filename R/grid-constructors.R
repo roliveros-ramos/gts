@@ -139,8 +139,7 @@ make_grid = function(lon, lat, dx, dy=dx, n=1, thr=0.8, hires=FALSE, mask=TRUE) 
 
 }
 
-#' @describeIn grid Update the binary spatial mask of a `grid` object from its
-#'   probability surface.
+#' @rdname grid
 #' @export
 update_grid = function(grid, thr) {
   if(!inherits(grid, "grid")) stop("This is not a valid grid object.")
@@ -149,7 +148,7 @@ update_grid = function(grid, thr) {
 }
 
 
-#' @describeIn grid Read a spatial grid from a netCDF file.
+#' @rdname grid
 #' @export
 read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE,
                      value=FALSE, ...) {

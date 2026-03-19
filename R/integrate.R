@@ -55,12 +55,12 @@ integrate = function(f, ...) {
   UseMethod("integrate")
 }
 
-#' @describeIn integrate Default integration method for ordinary functions.
+#' @rdname integrate
+#' @inheritParams stats::integrate
 #' @export
 integrate.default = stats::integrate
 
-#' @describeIn integrate Vertically integrate a `gts` object over its depth
-#'   dimension.
+#' @rdname integrate
 #' @export
 integrate.gts = function(f, lower, upper=0, by=NULL, subdivisions = NULL, ...) {
 
@@ -191,8 +191,7 @@ vertical_integration = function(f, lower, upper=0, dim, by=NULL, subdivisions = 
 
 }
 
-#' @describeIn vertical_integration Locate where a profile crosses a reference
-#'   value.
+#' @rdname vertical_integration
 #' @export
 locate = function(y, x, ref, allover=NA, allbelow=NA) {
   if(all(is.na(y))) return(NA)

@@ -189,7 +189,7 @@ map_details = function(primeMeridian="center", hires=FALSE, col="darkolivegreen4
 
   if(hires) {
     if(!requireNamespace("mapdata", quietly = TRUE)) {
-      warning("You need to install the 'mapdata' package, using hires=FALSE.")
+      warning("Package 'mapdata' is not installed; using hires = FALSE.")
       hires = FALSE
     }
   }

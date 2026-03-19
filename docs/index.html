@@ -6,18 +6,17 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Gridded time series data manipulation and analysis • gts</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
-<script src="katex-auto.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" sizes="any" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
+<!-- katex math --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script><script src="katex-auto.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><link href="deps/KaTex-0.16.10/katex.min.css" rel="stylesheet">
-<script src="deps/KaTex-0.16.10/katex.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Gridded time series data manipulation and analysis">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Gridded time series data manipulation and analysis">
 <meta name="description" content="Management of gridded time-series (arrays with a time dimension), with geographical dimensions (longitude, latitude, depth/altitude). The package provides methods to read and write gridded time-series (GTS) objects and manage them using R time-series methods.">
 <meta property="og:description" content="Management of gridded time-series (arrays with a time dimension), with geographical dimensions (longitude, latitude, depth/altitude). The package provides methods to read and write gridded time-series (GTS) objects and manage them using R time-series methods.">
 <meta property="og:image" content="https://roliveros-ramos.github.io/gts/logo.png">
@@ -30,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gts</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.9012</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.9019</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,37 +68,187 @@
 </div>
 <!-- badges: start -->
 
-<div class="section level3">
-<h3 id="gridded-time-series-manipulation-and-analysis">Gridded Time-Series manipulation and analysis<a class="anchor" aria-label="anchor" href="#gridded-time-series-manipulation-and-analysis"></a>
-</h3>
-<p>Management of gridded time-series (arrays with a time dimension), normally geographical (longitude, latitude, depth/altitude). The package provides methods to read and write gridded time-series (GTS) objects and manage them using R time-series methods.</p>
-<p>See <a href="https://roliveros-ramos.github.io/gts/" class="uri">https://roliveros-ramos.github.io/gts/</a> for more details.</p>
+<div class="section level2">
+<h2 id="gridded-time-series-manipulation-and-analysis">Gridded time-series manipulation and analysis<a class="anchor" aria-label="anchor" href="#gridded-time-series-manipulation-and-analysis"></a>
+</h2>
+<p><code>gts</code> provides a lightweight workflow for working with gridded environmental arrays in R, especially data stored in netCDF files. The package is centred on three complementary object types:</p>
+<ul>
+<li>
+<code>gts</code>: gridded time-series objects;</li>
+<li>
+<code>static</code>: time-invariant gridded spatial fields such as bathymetry, shelf break, cell area, or distance to coast;</li>
+<li>
+<code>grid</code>: spatial grid objects storing geometry, masks, and associated metadata.</li>
+</ul>
+<p>The package aims to make common operations on environmental grids easier and more reproducible inside R: reading and writing netCDF files, inspecting metadata, subsetting in space and time, regridding, filling missing values, computing climatologies and summaries, reshaping to tabular form, and combining point observations with gridded products.</p>
+<p>Full documentation is available at <a href="https://roliveros-ramos.github.io/gts/" class="uri">https://roliveros-ramos.github.io/gts/</a>.</p>
 </div>
-<div class="section level3">
-<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h3>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># The easiest way to get gts is to install it from CRAN:</span></span>
-<span><span class="co">#install.packages("gts")</span></span>
+<code class="sourceCode R"><span><span class="co"># CRAN release</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"gts"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Or the development version from GitHub:</span></span>
-<span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="co"># Development version</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"roliveros-ramos/gts"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
-</h3>
-<p>For a quick introduction, check the worked the examples available from the package:</p>
+<div class="section level2">
+<h2 id="main-entry-points">Main entry points<a class="anchor" aria-label="anchor" href="#main-entry-points"></a>
+</h2>
+<p>For most users, the package workflow starts with one of these functions:</p>
+<ul>
+<li>
+<code><a href="reference/gts.html">read_gts()</a></code> to read a gridded time-series from a netCDF file;</li>
+<li>
+<code><a href="reference/static.html">read_static()</a></code> to read a time-invariant gridded variable from a netCDF file;</li>
+<li>
+<code><a href="reference/grid.html">read_grid()</a></code> or <code><a href="reference/grid.html">make_grid()</a></code> to import or create a spatial grid.</li>
+</ul>
+<p>Lower-level constructors are also available when you already have arrays and metadata in memory:</p>
+<ul>
+<li>
+<code><a href="reference/gts.html">gts()</a></code> to build a <code>gts</code> object from an array or an open netCDF handle;</li>
+<li>
+<code><a href="reference/grid.html">make_grid()</a></code> to create a regular grid programmatically.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="example-files-shipped-with-the-package">Example files shipped with the package<a class="anchor" aria-label="anchor" href="#example-files-shipped-with-the-package"></a>
+</h2>
+<p>The package includes a few small netCDF files under <code>inst/ncdf</code>. After installation, you can access them with <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://roliveros-ramos.github.io/gts/">gts</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"gts"</span><span class="op">)</span></span></code></pre></div>
-<p>For a more detailed explanation of the package philosophy, you can read the article <a href="https://doi.org/10.1111/2041-210X.14452" class="external-link">gts: an R package for fitting complex ecological models</a>.</p>
+<span></span>
+<span><span class="va">sst_file</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ncdf"</span>, <span class="st">"sst.nc4"</span>, package <span class="op">=</span> <span class="st">"gts"</span><span class="op">)</span></span>
+<span><span class="va">bathy_file</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ncdf"</span>, <span class="st">"bathymetry.nc"</span>, package <span class="op">=</span> <span class="st">"gts"</span><span class="op">)</span></span>
+<span><span class="va">shelf_file</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ncdf"</span>, <span class="st">"shelfbreak.nc"</span>, package <span class="op">=</span> <span class="st">"gts"</span><span class="op">)</span></span></code></pre></div>
+<p>These files are intended as quick examples:</p>
+<ul>
+<li>
+<code>sst.nc4</code>: a <code>gts</code> object with a time dimension;</li>
+<li>
+<code>bathymetry.nc</code>: a <code>static</code> object;</li>
+<li>
+<code>shelfbreak.nc</code>: a <code>static</code> object.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
+</h2>
+<div class="section level3">
+<h3 id="read-bundled-example-data">Read bundled example data<a class="anchor" aria-label="anchor" href="#read-bundled-example-data"></a>
+</h3>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://roliveros-ramos.github.io/gts/">gts</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sst_file</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ncdf"</span>, <span class="st">"sst.nc4"</span>, package <span class="op">=</span> <span class="st">"gts"</span><span class="op">)</span></span>
+<span><span class="va">bathy_file</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ncdf"</span>, <span class="st">"bathymetry.nc"</span>, package <span class="op">=</span> <span class="st">"gts"</span><span class="op">)</span></span>
+<span><span class="va">shelf_file</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ncdf"</span>, <span class="st">"shelfbreak.nc"</span>, package <span class="op">=</span> <span class="st">"gts"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sst</span> <span class="op">=</span> <span class="fu"><a href="reference/gts.html">read_gts</a></span><span class="op">(</span><span class="va">sst_file</span><span class="op">)</span></span>
+<span><span class="va">bathy</span> <span class="op">=</span> <span class="fu"><a href="reference/static.html">read_static</a></span><span class="op">(</span><span class="va">bathy_file</span><span class="op">)</span></span>
+<span><span class="va">shelfbreak</span> <span class="op">=</span> <span class="fu"><a href="reference/static.html">read_static</a></span><span class="op">(</span><span class="va">shelf_file</span><span class="op">)</span></span>
+<span><span class="va">grd</span> <span class="op">=</span> <span class="fu"><a href="reference/grid.html">read_grid</a></span><span class="op">(</span><span class="va">sst_file</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="contributions">Contributions<a class="anchor" aria-label="anchor" href="#contributions"></a>
+<h3 id="inspect-coordinates-masks-and-resolution">Inspect coordinates, masks, and resolution<a class="anchor" aria-label="anchor" href="#inspect-coordinates-masks-and-resolution"></a>
 </h3>
-<p>If you find any bug, have questions about the documentation or requests for enhancements, please <a href="https://github.com/roliveros-ramos/gts/issues" class="external-link">open an issue</a>.</p>
-<p>Contributions are accepted as pull requests. Please note that the gts package is released with a <a href="https://www.contributor-covenant.org/version/2/1/code_of_conduct/" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bathy</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/resolution.html">resolution</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/mask.html">mask</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/coordinates.html">longitude</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/coordinates.html">latitude</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="subset-fill-and-regrid">Subset, fill, and regrid<a class="anchor" aria-label="anchor" href="#subset-fill-and-regrid"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># spatial subset</span></span>
+<span><span class="va">sst_sub</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">sst</span>, longitude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">85</span>, <span class="op">-</span><span class="fl">70</span><span class="op">)</span>, latitude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">25</span>, <span class="op">-</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># regrid to another grid</span></span>
+<span><span class="va">sst_regrid</span> <span class="op">=</span> <span class="fu"><a href="reference/regrid.html">regrid</a></span><span class="op">(</span><span class="va">sst_sub</span>, <span class="va">grd</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="summarise-and-analyse-the-time-dimension">Summarise and analyse the time dimension<a class="anchor" aria-label="anchor" href="#summarise-and-analyse-the-time-dimension"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># time-series summaries</span></span>
+<span><span class="va">sst_t</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">sst</span>, by <span class="op">=</span> <span class="st">"time"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sst_t</span><span class="op">)</span></span>
+<span><span class="va">sst_s</span> <span class="op">=</span> <span class="fu"><a href="reference/gridded-summary.html">sd</a></span><span class="op">(</span><span class="va">sst</span>, by <span class="op">=</span> <span class="st">"space"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sst_s</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># climatology</span></span>
+<span><span class="va">sst_clim</span> <span class="op">=</span> <span class="fu"><a href="reference/climatology-gts.html">climatology</a></span><span class="op">(</span><span class="va">sst</span>, FUN <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sst_clim</span>, time<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># quantiles over time</span></span>
+<span><span class="va">sst_q</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">sst</span>, probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.5</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sst_q</span><span class="op">)</span> <span class="co"># quantile 10% SST</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="work-with-static-spatial-covariates">Work with static spatial covariates<a class="anchor" aria-label="anchor" href="#work-with-static-spatial-covariates"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># static fields share much of the same interface</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bathy</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">shelfbreak</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/area.html">area</a></span><span class="op">(</span><span class="va">bathy</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bathy</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># arithmetic with gridded time-series objects</span></span>
+<span><span class="va">sst_adj</span> <span class="op">=</span> <span class="fu"><a href="reference/gridded-reshape.html">drop</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span> <span class="op">/</span> <span class="va">sst_clim</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sst_adj</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="reshape-or-merge-with-point-data">Reshape or merge with point data<a class="anchor" aria-label="anchor" href="#reshape-or-merge-with-point-data"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># long-format tables</span></span>
+<span><span class="va">sst_long</span> <span class="op">=</span> <span class="fu"><a href="reference/gts-reexports.html">melt</a></span><span class="op">(</span><span class="va">sst</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/View.html" class="external-link">View</a></span><span class="op">(</span><span class="va">sst_long</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="write-results-to-netcdf">Write results to netCDF<a class="anchor" aria-label="anchor" href="#write-results-to-netcdf"></a>
+</h3>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/write_ncdf.html">write_ncdf</a></span><span class="op">(</span><span class="va">sst</span>, <span class="st">"sst_out.nc"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/write_ncdf.html">write_ncdf</a></span><span class="op">(</span><span class="va">bathy</span>, <span class="st">"bathymetry_out.nc"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/write_ncdf.html">write_ncdf</a></span><span class="op">(</span><span class="va">grd</span>, <span class="st">"grid_out.nc"</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="core-features">Core features<a class="anchor" aria-label="anchor" href="#core-features"></a>
+</h2>
+<ul>
+<li>Read and write netCDF-backed gridded data.</li>
+<li>Work with time-varying (<code>gts</code>) and time-invariant (<code>static</code>) gridded objects.</li>
+<li>Store and reuse spatial grid metadata through <code>grid</code> objects.</li>
+<li>Use familiar time-series generics such as <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">time()</a></code>, <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">frequency()</a></code>, <code><a href="https://rdrr.io/r/stats/window.html" class="external-link">window()</a></code>, and <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle()</a></code> on gridded time-series objects.</li>
+<li>Regrid, interpolate, subset, and fill environmental grids.</li>
+<li>Compute climatologies, summaries, quantiles, and vertical integrations.</li>
+<li>Reshape gridded objects to tabular form and merge them with point records.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
+</h2>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># package introduction</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"gts"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># open the pkgdown site</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="st">"https://roliveros-ramos.github.io/gts/"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+</h2>
+<p>Bug reports, feature requests, and documentation improvements are welcome at <a href="https://github.com/roliveros-ramos/gts/issues" class="external-link uri">https://github.com/roliveros-ramos/gts/issues</a>.</p>
+<p>Pull requests are also welcome. Please note that <code>gts</code> is released with a Contributor Code of Conduct. By contributing to this project, you agree to abide by its terms.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -113,7 +262,7 @@
 <div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.r-project.org/Licenses/GPL-2" class="external-link">GPL-2</a></li>
+<li><a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a></li>
 </ul>
 </div>
 
@@ -128,7 +277,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Ricardo Oliveros-Ramos <br><small class="roles"> Maintainer </small>  </li>
+<li>Ricardo Oliveros-Ramos <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-8069-2101" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 
@@ -154,7 +303,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

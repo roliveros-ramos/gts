@@ -2,4 +2,66 @@ url: https://roliveros-ramos.github.io/gts/
 template:
   bootstrap: 5
   math-rendering: katex
+reference:
+  - title: Get started
+    contents:
+      - gts
+      - static
+      - grid
+      - gts-class
+      - static-class
+      - grid-class
 
+  - title: Inspect gridded objects
+    contents:
+      - gridded-inspect
+      - resolution
+      - print.gts.resolution
+
+  - title: Coordinates and spatial helpers
+    contents:
+      - coordinates
+      - transform_coordinates
+      - is_ocean
+      - area
+      - mask
+
+  - title: Grid processing and interpolation
+    contents:
+      - interpolate
+      - regrid
+      - fill
+      - gridded-subset
+
+  - title: Time series and temporal analysis
+    contents:
+      - gts-time
+      - climatology-gts
+      - gridded-summary
+      - quantile-gts
+      - stl_array
+      - stl_array2
+      - integrate
+      - vertical_integration
+
+  - title: Mathematical operations
+    contents:
+      - gridded-math
+      - slog
+
+  - title: Reshape, merge, and export
+    contents:
+      - gridded-reshape
+      - merge-gts
+      - write_ncdf
+
+  - title: Plotting and maps
+    contents:
+      - gridded-plot
+      - image_map
+      - map.axes2
+      - map_details
+
+  - title: Utilities
+    contents:
+      - compact_gam

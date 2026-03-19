@@ -1,10 +1,10 @@
-pandoc: '3.4'
-pkgdown: 2.1.1
+pandoc: 3.6.3
+pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   gts: gts.html
   v02-integration_data_frames: v02-integration_data_frames.html
-last_built: 2025-05-23T23:01Z
+last_built: 2026-03-19T05:45Z
 urls:
   reference: https://roliveros-ramos.github.io/gts/reference
   article: https://roliveros-ramos.github.io/gts/articles

@@ -1,27 +1,101 @@
-
-
-#' Interpolation of bivariate data
+#' Interpolate bivariate data on grids or point locations
 #'
-#' @param x x input
-#' @param y y input
-#' @param z z input
-#' @param xout x output
-#' @param yout y output
-#' @param method The method
-#' @param extrap Do you want to extrapolate outside the convex-hull of your data?
-#' @param control Control arguments
-#' @param ... Additional arguments
+#' `interpolate()` provides a unified interface for interpolating two-dimensional
+#' data from regular grids, irregular grids, or point locations to new spatial
+#' locations. The default method is `"bilinear"`.
 #'
-#' @return A list
-#' @export
+#' The function accepts a spatial field as a matrix, or a higher-dimensional array
+#' whose first two dimensions represent space. When `z` has additional trailing
+#' dimensions, interpolation is applied independently to each layer and the extra
+#' dimensions are preserved in the output.
+#'
+#' @param x,y Coordinates describing the input data. Supported input formats are:
+#'   \itemize{
+#'   \item a regular grid, given as increasing numeric vectors, with
+#'   `dim(z)[1:2] == c(length(x), length(y))`;
+#'   \item an irregular grid, given as numeric matrices with the same dimensions
+#'   as `z`;
+#'   \item point data, given as numeric vectors of the same length as `z`.
+#'   }
+#' @param z Numeric values to interpolate. `z` must be a matrix for a single
+#'   spatial field, or an array whose first two dimensions match the spatial
+#'   dimensions implied by `x` and `y`.
+#' @param xout,yout Coordinates of the target locations. Supported output formats
+#'   are:
+#'   \itemize{
+#'   \item a regular grid, given as increasing numeric vectors;
+#'   \item an irregular grid, given as numeric matrices of identical dimensions;
+#'   \item paired point locations, given as numeric vectors of equal length.
+#'   }
+#' @param method Interpolation method. Currently supported methods in the shared
+#'   implementation are `"bilinear"`, `"nearest"`, and `"akima"`. Not all methods
+#'   support all combinations of input and output geometry; see \strong{Details}.
+#' @param extrap Logical; if `TRUE`, allow extrapolation outside the input domain
+#'   when supported by the selected method. If `FALSE`, unsupported target
+#'   locations are returned as `NA`.
+#' @param control A named list of method-specific control options. Common entries
+#'   include:
+#'   \describe{
+#'   \item{`mask`}{Optional mask used by bilinear interpolation. Values equal to
+#'   `0` are treated as missing.}
+#'   \item{`link`}{Optional link function name used to transform `z` before
+#'   interpolation and back-transform it afterwards via [stats::gaussian()].}
+#'   \item{`linear`}{Logical; for `"akima"` interpolation, request linear rather
+#'   than Akima interpolation.}
+#'   }
+#'   Additional named entries are passed to the underlying Akima routines; see
+#'   \strong{Details}.
+#' @param ... Additional arguments passed to the underlying interpolation helper.
+#'
+#' @details
+#' Inputs are classified internally as one of three spatial data layouts:
+#' regular grids, irregular grids, or point data.
+#'
+#' Missing values in gridded inputs are handled differently depending on the
+#' interpolation method. For Akima-based interpolation, complete cases are
+#' extracted and treated as point data. For bilinear and nearest-neighbour
+#' interpolation, support is currently limited to regular-grid origins.
+#'
+#' In the current implementation:
+#' \itemize{
+#' \item `"bilinear"` is implemented for regular-grid origins and regular-grid or
+#' irregular-grid targets;
+#' \item `"nearest"` is implemented for regular-grid origins and regular-grid or
+#' irregular-grid targets;
+#' \item `"akima"` supports regular grids, irregular grids, and point data, and is
+#' the method that most clearly supports paired point output;
+#' \item bilinear and nearest-neighbour interpolation are not implemented for
+#' irregular-grid or point-data origins.
+#' }
+#'
+#' For Akima-based interpolation, `control` may include arguments used by the
+#' underlying Akima routines, such as `duplicate`, `dupfun`, `nx`, `ny`,
+#' `jitter`, `jitter.iter`, `jitter.random`, and `remove`.
+#'
+#' @return A list with components:
+#' \describe{
+#'   \item{`x`, `y`}{The requested output coordinates, returned in the same form as
+#'   supplied by `xout` and `yout`.}
+#'   \item{`z`}{Interpolated values. For regular-grid output this is typically a
+#'   matrix of dimension `length(xout) x length(yout)`. For irregular-grid output,
+#'   it has `dim(xout)`. If the input `z` has additional trailing dimensions, they
+#'   are preserved after the two spatial dimensions.}
+#' }
+#'
+#' @seealso [akima::interp()], [akima::interpp()]
 #'
 #' @examples
-#'data(volcano)
-#'x = seq(from=0, to=1, length.out = nrow(volcano))
-#'y = seq(from=0, to=1, length.out = ncol(volcano))
-#'xout = seq(from=0, to=1, length.out = 3*nrow(volcano))
-#'yout = seq(from=0, to=1, length.out = 3*ncol(volcano))
-#'zout = interpolate(x, y, volcano, xout, yout)
+#' \dontrun{
+#' data(volcano)
+#' x <- seq(0, 1, length.out = nrow(volcano))
+#' y <- seq(0, 1, length.out = ncol(volcano))
+#' xout <- seq(0, 1, length.out = 3 * nrow(volcano))
+#' yout <- seq(0, 1, length.out = 3 * ncol(volcano))
+#'
+#' out <- interpolate(x, y, volcano, xout, yout, method = "bilinear")
+#' str(out)
+#' }
+#' @export
 interpolate = function(x, y, z, ...) {
   UseMethod("interpolate", z)
 }
@@ -29,7 +103,15 @@ interpolate = function(x, y, z, ...) {
 
 # Auxiliar functions ------------------------------------------------------
 
-# this only return the array z, and has it as first argument to be used with apply.
+#' Internal helpers for `interpolate()`
+#'
+#' Developer-oriented helper functions used to apply interpolation methods over
+#' one or more layers and to manage optional transformations and error handling.
+#'
+#' @name interpolate-internal
+#' @keywords internal
+NULL
+
 .interp = function(z, x, y, xout, yout, iFUN, extrap=FALSE, control=list(), ...) {
 
   iFUN = match.fun(iFUN)
@@ -56,6 +138,23 @@ interpolate = function(x, y, z, ...) {
 
 }
 
+#' Vectorise interpolation over trailing dimensions of an array
+#'
+#' `interp()` applies `.interp()` over all layers of `z` beyond the first two
+#' spatial dimensions and reconstructs the output array.
+#'
+#' @param z Input matrix or array.
+#' @param x,y Input coordinates.
+#' @param xout,yout Output coordinates.
+#' @param FUN Interpolation helper function.
+#' @param extrap Logical; passed to `.interp()`.
+#' @param control Named list of internal control options.
+#' @param ... Additional arguments passed to `FUN`.
+#'
+#' @return An array of interpolated values whose first dimensions correspond to
+#'   the requested output geometry and whose remaining dimensions match the
+#'   trailing dimensions of `z`.
+#' @rdname interpolate-internal
 interp = function(z, x, y, xout, yout, FUN, extrap=FALSE, control=list(), ...) {
 
   ndim = dim(xout)
@@ -74,6 +173,8 @@ interp = function(z, x, y, xout, yout, FUN, extrap=FALSE, control=list(), ...) {
 
 # Methods -----------------------------------------------------------------
 
+#' @rdname interpolate
+#' @method interpolate default
 #' @export
 interpolate.default = function(x, y, z, xout, yout, method="bilinear", extrap=FALSE, control=list(), ...) {
 
@@ -246,10 +347,10 @@ interpolate.default = function(x, y, z, xout, yout, method="bilinear", extrap=FA
 
   con[names(control)]  = control
 
-  out = interp(x=x, y=y, z=z, xo=xout, yo=yout, linear = linear,
-               extrap=extrap, duplicate=con$duplicate, dupfun=con$dupfun,
-               nx=con$nx, ny=con$ny, jitter=con$jitter, jitter.iter = con$jitter.iter,
-               jitter.random = con$jitter.random, remove = con$remove)
+  out = akima::interp(x=x, y=y, z=z, xo=xout, yo=yout, linear = linear,
+                      extrap=extrap, duplicate=con$duplicate, dupfun=con$dupfun,
+                      nx=con$nx, ny=con$ny, jitter=con$jitter, jitter.iter = con$jitter.iter,
+                      jitter.random = con$jitter.random, remove = con$remove)
 
   # options for interp::interp
   # con = list(duplicate = "error", dupfun = NULL,
@@ -287,10 +388,10 @@ interpolate.default = function(x, y, z, xout, yout, method="bilinear", extrap=FA
 
   con[names(control)]  = control
 
-  out = interpp(x=x, y=y, z=z, xo=xout, yo=yout, linear = linear,
-               extrap=extrap, duplicate=con$duplicate, dupfun=con$dupfun,
-               jitter=con$jitter, jitter.iter = con$jitter.iter,
-               jitter.random = con$jitter.random, remove = con$remove)
+  out = akima::interpp(x=x, y=y, z=z, xo=xout, yo=yout, linear = linear,
+                       extrap=extrap, duplicate=con$duplicate, dupfun=con$dupfun,
+                       jitter=con$jitter, jitter.iter = con$jitter.iter,
+                       jitter.random = con$jitter.random, remove = con$remove)
 
   return(out)
 

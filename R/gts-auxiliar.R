@@ -1,12 +1,36 @@
+#' Signed logarithmic transform
+#'
+#' `slog()` applies a signed logarithmic transform, preserving the sign of the
+#' input values.
+#'
+#' @param x A numeric vector, matrix, or array.
+#'
+#' @details
+#' The transform is defined as `sign(x) * log(abs(x))`.
+#' It is not defined at `x = 0`.
+#'
+#' @return An object with the same shape as `x`, containing the transformed
+#'   values.
 #' @export
 slog = function(x) sign(x)*log(abs(x))
 
-#' Reduce the object of a GAM object by eliminating caller environment references
+
+#' Compact a GAM or GLM object
 #'
-#' @param object A GAM or GLM object
-#' @param ... Additional arguments
+#' `compact_gam()` removes selected stored components and environment references
+#' from a fitted model object in order to reduce its size.
 #'
-#' @returns
+#' @param object A fitted model object inheriting from `"glm"`, including GAM
+#'   objects.
+#' @param ... Additional unused arguments.
+#'
+#' @details
+#' The function removes several heavy components, such as stored model data,
+#' fitted values, residuals, weights, offsets, and selected internal matrices.
+#' It also resets some stored environments to reduce references to the caller
+#' environment.
+#'
+#' @return A compacted object of the same class as `object`.
 #' @export
 compact_gam = function(object, ...) {
   if(!inherits(object, "glm")) stop("object must at least inherit class 'glm'.")

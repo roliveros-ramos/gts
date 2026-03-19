@@ -1,30 +1,84 @@
+#' Compute the area of grid cells
+#'
+#' `area()` computes the horizontal area of each cell in a spatial grid.
+#'
+#' For `grid` objects, the method returns a matrix with the area of each grid
+#' cell. For `gts` and `static` objects, the calculation is delegated to the
+#' associated grid.
+#'
+#' When an area matrix is already stored in a `grid` object and no output units
+#' are requested, that cached matrix is returned directly.
+#'
+#' @param x A `grid`, `gts`, or `static` object.
+#' @param units Character string giving the output area units. Supported values
+#'   are `"km2"`, `"m2"`, and `"cm2"`. If omitted, the current implementation
+#'   defaults to `"km2"` when the area is computed.
+#' @param ... Additional arguments passed to the method.
+#'
+#' @details
+#' `area.grid()` computes cell area from the `psi` grid coordinates stored in the
+#' object. The calculation uses the corner geometry defined by `x$psi$LON` and
+#' `x$psi$LAT`, together with the latitude-dependent cosine correction used in
+#' the current implementation.
+#'
+#' If `x$area` is already available and `units` is `NULL`, the stored matrix is
+#' returned unchanged.
+#'
+#' If the `psi` grid is missing, the low-level area calculation currently returns
+#' `NULL`.
+#'
+#' `area.gts()` and `area.static()` are convenience methods that apply `area()`
+#' to `x$grid`.
+#'
+#' @return
+#' Depending on the method:
+#' \describe{
+#'   \item{`area.grid()`}{A numeric matrix with the area of each grid cell, or
+#'   `NULL` when the required `psi` coordinates are not available.}
+#'   \item{`area.gts()`}{A numeric matrix with the area of each cell of the
+#'   associated grid, or `NULL` when the required `psi` coordinates are not
+#'   available.}
+#'   \item{`area.static()`}{A numeric matrix with the area of each cell of the
+#'   associated grid, or `NULL` when the required `psi` coordinates are not
+#'   available.}
+#' }
+#'
+#' @seealso [grid-class], [gts-class], [static-class], [make_grid()], [fill()]
+#'
+#' @examples
+#' \dontrun{
+#' a1 <- area(grd)
+#' a2 <- area(grd, units = "m2")
+#' a3 <- area(x)
+#' a4 <- area(bathy)
+#' }
+#' @name area
+NULL
 
-#' Calculate the area of every square of a grid
-#'
-#' @param x A grid, linear o curvilinear.
-#' @param ... Additional parameters for grid computation.
-#'
-#' @return A matrix, with the area of each square of the grid.
+#' @rdname area
 #' @export
-#'
 area = function(x, ...) {
   UseMethod("area")
 }
 
-
-# S3 methods --------------------------------------------------------------
-
+#' @describeIn area Compute the area of each cell of a `grid` object.
 #' @export
 area.grid = function(x, units=NULL, ...) {
   if(!is.null(x$area) & is.null(units)) return(x$area)
   return(calculate_area(x, units=units))
 }
 
+#' @describeIn area Compute the area of the cells of the grid associated with a
+#'   `gts` object.
 #' @export
 area.gts = function(x, units=NULL, ...) {
   return(area(x$grid, units=units))
 }
 
+#' @describeIn area Compute the area of the cells of the grid associated with a
+#'   `static` object.
+#' @export
+area.static = area.grid
 
 # Internal functions ------------------------------------------------------
 

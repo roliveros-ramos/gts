@@ -1,26 +1,98 @@
+#' Subset gridded objects
+#'
+#' These are methods for the base [base::subset()] generic applied to gridded
+#' objects.
+#'
+#' The page covers three related classes:
+#' \itemize{
+#'   \item `gts` objects, which store gridded time-series data;
+#'   \item `static` objects, which store gridded spatial fields without a time
+#'   dimension;
+#'   \item `grid` objects, which store spatial geometry and associated metadata.
+#' }
+#'
+#' Spatial subsetting is performed by longitude and latitude ranges, or by using
+#' the extent of another grid-like object. For `gts` objects, an additional
+#' temporal subset can be requested by cycle position within the regular time
+#' series.
+#'
+#' @param x A `gts`, `grid`, or `static` object.
+#' @param longitude,latitude Numeric vectors defining the horizontal range to
+#'   retain. Only the range of the supplied values is used.
+#' @param grid A `grid` object, or a `gts` object from which the grid is
+#'   extracted. When supplied, its spatial extent is used as the target subset
+#'   extent.
+#' @param frequency Integer vector of cycle values to retain when subsetting a
+#'   `gts` object. Values must be positive integers not exceeding
+#'   `frequency(x)`.
+#' @param expand Numeric expansion applied to the target grid extent, typically
+#'   in coordinate units. This may be a scalar, used for both longitude and
+#'   latitude, or a vector of length two.
+#' @param index.return Logical; if `TRUE`, `subset.grid()` includes the logical
+#'   longitude and latitude indices used for subsetting in the returned object.
+#' @param ... Additional arguments passed to the method.
+#'
+#' @details
+#' `subset.grid()` is the low-level spatial subsetting method. It subsets the
+#' horizontal coordinates, coordinate matrices, optional `area`, optional
+#' `mask`, and the flattened coordinate table `df`. When `index.return = TRUE`,
+#' it also stores the logical indices used for longitude and latitude in
+#' `x$index`.
+#'
+#' `subset.gts()` first applies `subset.grid()` to the object's `grid`
+#' component, then subsets the data array `x$x` along the first two spatial
+#' dimensions. It updates the top-level longitude and latitude components,
+#' recomputes spatial breaks for regular grids, updates the first two entries of
+#' `x$info$dim`, and removes the temporary grid indices afterwards.
+#'
+#' If `frequency` is supplied, `subset.gts()` also subsets the last dimension by
+#' cycle position using `cycle(x) %in% frequency`. After this operation, it
+#' updates the stored time vector, time breaks, and time metadata, and sets
+#' `x$info$ts` to `NULL`.
+#'
+#' `subset.static()` performs the same spatial subsetting workflow as
+#' `subset.gts()`, but without any time-related operations.
+#'
+#' In the current implementation, `subset.grid()` does not update all possible
+#' auxiliary grid components, such as `psi` or `prob`, and `subset.gts()` uses
+#' cycle-based rather than date-based temporal filtering when `frequency` is
+#' supplied.
+#'
+#' @return
+#' Depending on the method:
+#' \describe{
+#'   \item{`subset.gts()`}{A subsetted `gts` object.}
+#'   \item{`subset.grid()`}{A subsetted `grid` object. If `index.return = TRUE`,
+#'   the returned object also includes an `index` component with logical
+#'   longitude and latitude indices.}
+#'   \item{`subset.static()`}{A subsetted `static` object.}
+#' }
+#'
+#' @seealso [base::subset()], [window.gts()], [grid-class], [gts-class],
+#'   [static-class]
+#'
+#' @examples
+#' \dontrun{
+#' x1 <- subset(x, longitude = c(-80, -70), latitude = c(-20, -10))
+#' x2 <- subset(x, grid = grd, expand = 1)
+#' x3 <- subset(x, frequency = c(1, 2, 3))
+#' grd2 <- subset(grd, longitude = c(2, 8), latitude = c(40, 45))
+#' s2 <- subset(bathy, grid = grd2)
+#' }
+#' @name gridded-subset
+NULL
 
 
-#' Subsetting a spatial time series object
-#'
-#' @param x the object to be subsetted.
-#' @param longitude The range of longitude to subset the grid.
-#' @param latitude The range of latitude to subset the grid.
-#' @param grid A grid object, or a 'gts' object.
-#' @param expand Number of units to expand the grid, generally degrees.
-#' @param frequency Frequency values to subset.
-#' It can be one number or two (longitude, latitude).
-#' @param ... further arguments to be passed to or from other methods.
-#'
-#' @return A 'gts' object after subsetting.
+#' @describeIn gridded-subset Subset a `gts` object in space and, optionally, by
+#'   cycle position.
 #' @export
-#'
 subset.gts = function(x, longitude=NULL, latitude=NULL, grid=NULL, frequency=NULL, expand=0, ...) {
 
   if(!is.null(frequency)) {
     frequency = as.integer(frequency)
     if(any(is.na(frequency))) stop("Frequency argument must specify integers with the ts cycle.")
-    if(any(frequency<1)) stop("Frecuency must be positive.")
-    if(any(frequency > frequency(x))) stop("Frecuency values must be lower than the ts frequency.")
+    if(any(frequency<1)) stop("Frequency must be positive.")
+    if(any(frequency > frequency(x))) stop("Frequency values must be lower than the ts frequency.")
   }
 
   if(!is.null(longitude) | !is.null(latitude) | !is.null(grid)) {
@@ -55,7 +127,7 @@ subset.gts = function(x, longitude=NULL, latitude=NULL, grid=NULL, frequency=NUL
     if(length(dim(x$x))==3) x$x = x$x[, , ind, drop=FALSE]
     if(length(dim(x$x))==4) x$x = x$x[, , , ind, drop=FALSE]
 
-    x$time = time(obs)[ind]
+    x$time = time(x)[ind]
     x$breaks$time = .getBreaks(x$time)
     x$info$time$time = x$time
     x$info$dim$time = x$time
@@ -67,8 +139,7 @@ subset.gts = function(x, longitude=NULL, latitude=NULL, grid=NULL, frequency=NUL
 
 }
 
-
-#' @rdname subset.gts
+#' @describeIn gridded-subset Subset a `grid` object by spatial extent.
 #' @export
 subset.grid = function(x, longitude=NULL, latitude=NULL, index.return=FALSE, grid=NULL, expand=0, ...) {
 
@@ -117,7 +188,7 @@ subset.grid = function(x, longitude=NULL, latitude=NULL, index.return=FALSE, gri
 }
 
 
-#' @rdname subset.gts
+#' @describeIn gridded-subset Subset a `static` object in space.
 #' @export
 subset.static = function(x, longitude=NULL, latitude=NULL, grid=NULL, expand=0, ...) {
 

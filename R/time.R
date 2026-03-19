@@ -1,35 +1,118 @@
+#' Time-series methods for `gts` objects
+#'
+#' These methods expose the regular time-series metadata stored in a `gts`
+#' object through familiar time-series generics.
+#'
+#' `time.gts()`, `frequency.gts()`, `deltat.gts()`, `start.gts()`, `end.gts()`,
+#' and `cycle.gts()` all delegate to the regular `ts` object stored in
+#' `x$info$ts`.
+#'
+#' `window.gts()` subsets a `gts` object using [stats::window()] on that regular
+#' time-series representation and updates the data array, time metadata, and
+#' time breaks accordingly.
+#'
+#' `climatology.gts()` aggregates the last dimension of the data array by cycle
+#' and returns a climatological `gts` object.
+#'
+#' @param x A `gts` object.
+#' @param FUN Aggregation function used by `climatology.gts()`. This can be a
+#'   function or the name of a function. The function is applied over all
+#'   observations belonging to the same cycle.
+#' @param ... Additional arguments passed to the underlying method. For
+#'   `time.gts()`, `frequency.gts()`, `deltat.gts()`, `start.gts()`, `end.gts()`,
+#'   and `cycle.gts()`, these are passed to the corresponding generic. For
+#'   `window.gts()`, they are passed to [stats::window()]. For
+#'   `climatology.gts()`, they are passed to `FUN`.
+#'
+#' @details
+#' These methods operate on the regular time-series representation stored in
+#' `x$info$ts`, not directly on `x$time`. In particular, `time.gts()` returns
+#' the regular numeric time scale of the underlying `ts` object, whereas
+#' `x$time` typically stores date-like values.
+#'
+#' `window.gts()` currently uses the standard `ts` indexing rules of
+#' [stats::window()]. It therefore expects `start`, `end`, and related
+#' arguments on the regular time scale of `x$info$ts`. Date or character
+#' expansion is not currently implemented.
+#'
+#' `climatology.gts()` groups observations by `cycle(x)` and applies `FUN` to
+#' each group. For three-dimensional objects, aggregation is done over the last
+#' dimension at each horizontal grid cell. For four-dimensional objects,
+#' aggregation is done at each horizontal grid cell and depth level. The
+#' returned object keeps the `gts` structure but replaces the time axis by cycle
+#' values, stores mean original time labels by cycle, resets `info$ts` to a
+#' cycle-based `ts` object starting at `0`, and sets `info$climatology = TRUE`.
+#'
+#' @return
+#' Depending on the method:
+#' \describe{
+#'   \item{`time.gts()`}{A numeric vector giving the regular time scale of
+#'   `x$info$ts`.}
+#'   \item{`frequency.gts()`}{A numeric scalar giving the observation frequency
+#'   of `x$info$ts`.}
+#'   \item{`deltat.gts()`}{A numeric scalar giving the time step of
+#'   `x$info$ts`.}
+#'   \item{`start.gts()`, `end.gts()`}{Numeric vectors in the usual `ts`
+#'   representation of the start or end of the series.}
+#'   \item{`cycle.gts()`}{An integer vector giving the cycle position of each
+#'   observation.}
+#'   \item{`window.gts()`}{A subsetted `gts` object with updated data, time
+#'   vector, time metadata, and time breaks.}
+#'   \item{`climatology.gts()`}{A `gts` object representing a climatological
+#'   cycle.}
+#'   \item{`climatology()`}{The result of the selected method.}
+#' }
+#'
+#' @seealso [gts-class], [is_climatology()], [gridded-summary],
+#'   [stats::window()], [stats::ts()]
+#'
+#' @examples
+#' \dontrun{
+#' frequency(x)
+#' cycle(x)
+#' x2 <- window(x, start = c(2000, 1), end = c(2005, 12))
+#' clim <- climatology(x, FUN = "mean")
+#' }
+#' @name gts-time
+NULL
 
+#' @describeIn gts-time Return the regular time scale of a `gts` object.
 #' @export
 time.gts = function(x, ...) {
   time(x$info$ts)
 }
 
+#' @describeIn gts-time Return the observation frequency of a `gts` object.
 #' @export
 frequency.gts = function(x, ...) {
   frequency(x$info$ts)
 }
 
+#' @describeIn gts-time Return the time step of a `gts` object.
 #' @export
 deltat.gts = function(x, ...) {
   deltat(x$info$ts)
 }
 
+#' @describeIn gts-time Return the start of a `gts` time series.
 #' @export
 start.gts = function(x, ...) {
   start(x$info$ts)
 }
 
+#' @describeIn gts-time Return the end of a `gts` time series.
 #' @export
 end.gts = function(x, ...) {
   end(x$info$ts)
 }
 
+#' @describeIn gts-time Return the cycle positions of a `gts` time series.
 #' @export
 cycle.gts = function(x, ...) {
   cycle(x$info$ts)
 }
 
-# add expansion to use dates (or characters)
+#' @describeIn gts-time Subset a `gts` object using `ts`-style time indexing.
 #' @export
 window.gts = function(x, ...) {
   nts = window(x$info$ts, ...)
@@ -40,15 +123,76 @@ window.gts = function(x, ...) {
   x$info$time$time = x$info$time$time[ind]
   x$breaks$time = .getBreaks(x$info$time$time)
   x$info$dim$time = x$info$dim$time[ind]
-  x$info$ts = ts(seq_along(x$time), start=start(nts), freq=frequency(nts))
+  x$info$ts = ts(seq_along(x$time), start=start(nts), frequency=frequency(nts))
   return(x)
 }
 
+
+#' Compute climatologies from gridded time-series objects
+#'
+#' `climatology()` is an S3 generic for computing climatological cycles from
+#' time-indexed objects.
+#'
+#' `climatology.gts()` aggregates a `gts` object by `cycle(x)` and returns a new
+#' `gts` object representing one climatological cycle.
+#'
+#' @param x A `gts` object.
+#' @param FUN Aggregation function used to compute the climatology. This can be
+#'   a function or the name of a function. The function is applied over all
+#'   observations belonging to the same cycle.
+#' @param ... Additional arguments passed to `FUN`.
+#'
+#' @details
+#' `climatology.gts()` groups observations by `cycle(x)` using the regular
+#' `ts` representation stored in `x$info$ts`.
+#'
+#' For three-dimensional objects, aggregation is performed for each horizontal
+#' grid cell over the last dimension. For four-dimensional objects, aggregation
+#' is performed for each horizontal grid cell and depth level over the last
+#' dimension.
+#'
+#' The returned object preserves the `gts` structure but redefines the time axis
+#' so that it represents cycle positions rather than the original sequence of
+#' observations. Specifically:
+#' \itemize{
+#'   \item `x$x` is replaced by the aggregated climatology array;
+#'   \item `x$time` is replaced by `seq_len(frequency(x))`;
+#'   \item `x$breaks$time` is recomputed from those cycle values;
+#'   \item `x$info$time$time` is replaced by the mean of the original time
+#'   labels within each cycle;
+#'   \item `x$info$dim$time` is replaced by the cycle values;
+#'   \item `x$info$ts` is reset to a cycle-based [stats::ts()] object starting
+#'   at `0`;
+#'   \item `x$info$climatology` is set to `TRUE`.
+#' }
+#'
+#' The internal helper currently supports only arrays of dimension 3 or 4.
+#'
+#' @return
+#' Depending on the method:
+#' \describe{
+#'   \item{`climatology()`}{The result of the selected method.}
+#'   \item{`climatology.gts()`}{A `gts` object representing a climatological
+#'   cycle.}
+#' }
+#'
+#' @seealso [gts-time], [is_climatology()], [cycle.gts()], [stats::ts()]
+#'
+#' @examples
+#' \dontrun{
+#' clim <- climatology(x, FUN = "mean")
+#' }
+#' @name climatology-gts
+NULL
+
+#' @describeIn climatology-gts Compute a climatology from an object.
 #' @export
 climatology = function(x, ...) {
   UseMethod("climatology")
 }
 
+#' @describeIn climatology-gts Aggregate a `gts` object by cycle to create a
+#'   climatology.
 #' @export
 climatology.gts = function(x, FUN="mean", ...) {
   index = as.numeric(cycle(x))
@@ -65,20 +209,18 @@ climatology.gts = function(x, FUN="mean", ...) {
   x$info$climatology = TRUE
 
   return(x)
-
 }
-
 
 # Auxiliar functions ------------------------------------------------------
 
 get_time = function(x) {
-  .this_time = function(x, ini, end) {
+  .this_time = function(x) {
     ini = ymd_hms(sprintf("%s-01-01 00:00:00", year(x)))
     end = ymd_hms(sprintf("%s-01-01 00:00:00", year(x)+1))
     out = year(x) + as.numeric(difftime(x, ini, units="secs"))/as.numeric(difftime(end, ini, units="secs"))
     return(out)
   }
-  out = sapply(x, FUN=.this_time, ini=ini, end=end)
+  out = sapply(x, FUN=.this_time)
   return(out)
 }
 

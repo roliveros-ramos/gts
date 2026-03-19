@@ -1,6 +1,25 @@
 
 # Internal functions: interpolate -----------------------------------------
 
+#' Validate interpolation inputs and classify their geometry
+#'
+#' `.check_input()` validates the spatial structure of `x`, `y`, and `z`, and
+#' identifies whether they describe a regular grid, an irregular grid, or point
+#' data. When incomplete cases are present, complete observations are extracted
+#' and returned for downstream use.
+#'
+#' @param x,y Input coordinates supplied to [interpolate()].
+#' @param z Input values supplied to [interpolate()].
+#'
+#' @return A list with components:
+#' \describe{
+#'   \item{`case`}{A named logical vector with entries `is_gridR`, `is_gridI`,
+#'   and `is_point`.}
+#'   \item{`hasNA`}{Logical; indicates whether incomplete cases were detected.}
+#'   \item{`data`}{A data frame of complete cases when missing values are present,
+#'   otherwise `NULL`.}
+#' }
+#' @rdname interpolate-internal
 .check_input = function(x, y, z) {
 
   x = drop(x)
@@ -62,6 +81,17 @@
 
 }
 
+#' Validate interpolation outputs and classify their geometry
+#'
+#' `.check_output()` validates `xout` and `yout` and identifies whether the
+#' requested output corresponds to a regular grid, an irregular grid, or paired
+#' point locations.
+#'
+#' @param x,y Output coordinates supplied to [interpolate()].
+#'
+#' @return A list with a single component `case`, a named logical vector with
+#'   entries `is_gridR`, `is_gridI`, and `is_point`.
+#' @rdname interpolate-internal
 .check_output = function(x, y) {
 
   x = drop(x)
@@ -91,6 +121,16 @@
 
 }
 
+#' Test whether coordinates are strictly increasing
+#'
+#' `monot()` checks whether a vector is strictly increasing, or whether all rows
+#' or columns of a matrix are strictly increasing.
+#'
+#' @param x Numeric vector or matrix.
+#' @param side Margin over which monotonicity is checked for matrix inputs.
+#'
+#' @return Logical scalar.
+#' @rdname interpolate-internal
 monot = function(x, side) {
   .monot  = function(x) all(diff(x) > 0)
   .monotM = function(x, side) all(apply(x, side, .monot))
@@ -98,12 +138,43 @@ monot = function(x, side) {
   return(.monot(x))
 }
 
+#' Compute nearest-cell indices for regular-grid interpolation
+#'
+#' `get_nearest_index()` maps target coordinates to the nearest grid-cell indices
+#' used by nearest-neighbour interpolation on regular grids.
+#'
+#' @param x,y Increasing coordinate vectors defining the source grid.
+#' @param xout,yout Target coordinates.
+#' @param mask Optional mask. Currently ignored by this helper.
+#' @param extrap Logical; currently ignored by this helper.
+#'
+#' @return A two-column integer matrix giving the x- and y-indices of the nearest
+#'   source locations.
+#' @rdname interpolate-internal
 get_nearest_index = function(x, y, xout, yout, mask=NULL, extrap=FALSE) {
   indx = cut(as.numeric(xout), breaks=.getBreaks(x), labels=FALSE)
   indy = cut(as.numeric(yout), breaks=.getBreaks(y), labels=FALSE)
   return(cbind(indx, indy))
 }
 
+#' Compute bilinear interpolation weights for regular grids
+#'
+#' `get_bilinear_weights()` constructs the sparse weight matrix used for bilinear
+#' interpolation from a regular source grid to target locations.
+#'
+#' @param x,y Increasing coordinate vectors defining the source grid.
+#' @param xout,yout Target coordinates. These must be paired vectors of equal
+#'   length.
+#' @param mask Optional mask on the source grid. Entries equal to `0` are treated
+#'   as missing. When `mask` is supplied, weights associated with masked cells are
+#'   either rejected or redistributed depending on `extrap`.
+#' @param extrap Logical; if `TRUE`, redistribute weights from masked source cells
+#'   over the remaining valid neighbours when possible.
+#'
+#' @return A sparse matrix of bilinear weights with one row per output location
+#'   and one column per source grid cell. The `"invalid"` attribute stores the
+#'   indices of target locations that could not be interpolated.
+#' @rdname interpolate-internal
 get_bilinear_weights = function(x, y, xout, yout, mask=NULL, extrap=FALSE) {
 
   nx = length(x)

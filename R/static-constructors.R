@@ -1,13 +1,90 @@
-
-#' Read an static variable from a netCDF file
+#' Read a static gridded object from a netCDF file
 #'
-#' @param varid Variable to read static variable (time-invariant).
-#' @param ... Additional arguments, currently unused.
+#' `read_static()` reads a time-invariant gridded variable from a netCDF file
+#' and returns it as a `static` object.
 #'
-#' @returns An object of class 'static'
+#' A `static` object stores a spatially structured field without a time axis,
+#' together with its horizontal coordinates, grid geometry, dimension metadata,
+#' and variable metadata.
+#'
+#' @param filename Path to a netCDF file.
+#' @param varid Variable identifier. This is the variable name in the netCDF
+#'   file. If omitted, the function tries to identify a single suitable variable
+#'   with more than one dimension.
+#' @param create_mask Logical; if `TRUE`, create a coastline-based spatial mask
+#'   using the same masking workflow as [make_grid()]. If `FALSE`, derive the
+#'   mask from the availability of the selected variable.
+#' @param ... Additional control arguments used during variable selection and
+#'   optional mask creation.
+#'
+#'   Supported entries include:
+#'   \describe{
+#'   \item{`use_first`}{Logical; if `TRUE`, use the first suitable netCDF
+#'   variable when several candidates are present.}
+#'   \item{`n`}{Number of test points per grid cell used when creating a
+#'   coastline-based mask.}
+#'   \item{`thr`}{Threshold used to convert the ocean-proportion surface to a
+#'   binary mask when creating a coastline-based mask.}
+#'   \item{`hires`}{Logical; if `TRUE`, use the high-resolution coastline when
+#'   creating a mask.}
+#'   }
+#'
+#' @details
+#' If `varid` is not supplied, `read_static()` searches the netCDF file for a
+#' suitable variable with more than one dimension. If no such variable exists,
+#' it errors. If several candidates exist, it errors unless `use_first = TRUE`,
+#' in which case the first candidate is used.
+#'
+#' The current implementation is intended for two-dimensional or
+#' three-dimensional variables. The first two dimensions are interpreted as
+#' horizontal space. When a third dimension is present, it is treated as depth
+#' and its metadata are stored in `info$depth`.
+#'
+#' The function checks that all coordinate dimensions are monotonic. If longitude,
+#' latitude, or depth are stored in decreasing order, both the coordinates and
+#' the data array are reversed to restore increasing order.
+#'
+#' Longitude and latitude are read from variables whose names begin with `lon`
+#' and `lat` when available. Otherwise, the first two dimensions of the selected
+#' variable are used as horizontal coordinates.
+#'
+#' For regular grids, longitude and latitude are stored as numeric vectors and
+#' the associated grid geometry is built from those vectors. For irregular grids,
+#' coordinate geometry is stored as matrices and the first two dimensions are
+#' indexed as `i` and `j`.
+#'
+#' When `create_mask = TRUE`, a coastline-based mask is generated with the same
+#' helper used by [make_grid()]. When `create_mask = FALSE`, the mask is derived
+#' from the availability of the selected variable, so cells containing only
+#' missing values are excluded from the spatial mask.
+#'
+#' The returned object includes a `grid` component with horizontal geometry and
+#' mask metadata, plus an `info` list describing the variable, dimensions,
+#' units, and global attributes.
+#'
+#' @return A `static` object. This is a list-like object with components:
+#' \describe{
+#'   \item{`x`}{Numeric matrix or array containing the spatial field.}
+#'   \item{`grid`}{Associated `grid` object describing the horizontal geometry
+#'   and mask.}
+#'   \item{`longitude`, `latitude`}{Horizontal coordinates as vectors or
+#'   matrices.}
+#'   \item{`breaks`}{List of cell boundaries for each stored dimension.}
+#'   \item{`info`}{Metadata list containing the variable identifier, long name,
+#'   depth metadata when present, dimension values, dimension units, variable
+#'   units, original variable names, and netCDF global attributes.}
+#' }
+#'
+#' @seealso [static-class], [read_gts()], [make_grid()], [read_grid()],
+#'   [grid-class]
+#'
+#' @examples
+#' \dontrun{
+#' bathy <- read_static("bathymetry.nc", varid = "depth")
+#' dist  <- read_static("distance_to_coast.nc")
+#' }
+#' @name static
 #' @export
-#' @inheritParams read_grid
-#' @inheritParams read_gts
 read_static = function(filename, varid=NULL, create_mask=FALSE, ...) {
 
   control = list(...)

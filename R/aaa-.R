@@ -4,17 +4,14 @@ NULL
 NULL
 #' @export write_ncdf
 NULL
-#' @importFrom reshape2 melt
-NULL
-#' @export melt
-NULL
 #' @importFrom fields poly.image image.plot interp.surface.grid tim.colors
 #' imageplot.info imageplot.setup
 NULL
 #' @importFrom maptools map2SpatialPolygons
 NULL
 #' @importFrom lubridate yday<- year month ymd leap_year parse_date_time period
-#' ymd_hms days_in_month parse_date_time days_in_month seconds
+#' ceiling_date floor_date ymd_hms days_in_month parse_date_time
+#' days_in_month seconds
 NULL
 #' @importFrom mgcv gam
 NULL
@@ -26,9 +23,20 @@ NULL
 NULL
 #' @importFrom colorful divergencePalette
 NULL
-#' @importFrom stats gaussian integrate quantile sd
+#' @importFrom stats gaussian integrate quantile sd cycle frequency deltat time
+#' start end window complete.cases median predict setNames splinefun ts
 NULL
 #' @importFrom maps map
 NULL
 #' @importFrom Matrix sparseMatrix
+NULL
+#' @importFrom methods Math2
+NULL
+#' @importFrom grDevices rainbow
+NULL
+#' @importFrom graphics axis box image mtext par title
+NULL
+#' @importFrom utils head setTxtProgressBar str tail txtProgressBar
+NULL
+#' @importFrom stlplus stlplus
 NULL

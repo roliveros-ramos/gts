@@ -24,7 +24,7 @@
 #' @export
 #' @inheritParams fields::image.plot
 #' @examples
-image.map = function (lon, lat, z, zlim=NULL, legend=TRUE, hires=FALSE, add = FALSE, nlevel = 1000, horizontal = FALSE,
+image_map = function (lon, lat, z, zlim=NULL, legend=TRUE, hires=FALSE, add = FALSE, nlevel = 1000, horizontal = FALSE,
                       legend.shrink = 0.9, legend.width = 1.2, slice=NULL,
                       legend.mar = ifelse(horizontal, 3.1, 5.1), legend.lab = NULL, graphics.reset = FALSE,
                       bigplot = NULL, smallplot = NULL, legend.only = FALSE,
@@ -171,12 +171,12 @@ image.map = function (lon, lat, z, zlim=NULL, legend=TRUE, hires=FALSE, add = FA
 #' @param primeMeridian Prime Meridian used in the map, possible values are "center" and "left", the former is the default.
 #' @param water Color of the water masses.
 #' @param countries Boolean, do add country boundaries? Default is FALSE.
-#' @param ...
+#' @param cex.axis The magnification to be used for axis annotation relative to the current setting of cex.
+#' @param ... Additional arguments
 #'
 #' @returns
 #' @export
-#' @inheritParams image.map
-#' @inheritParams map_details
+#' @inheritParams image_map
 #' @inheritParams graphics::grid
 #' @inheritParams maps::map
 #' @examples

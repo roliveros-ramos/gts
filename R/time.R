@@ -178,6 +178,9 @@ climatology = function(x, ...) {
 #'   climatology.
 #' @export
 climatology.gts = function(x, FUN="mean", ...) {
+
+  x = drop(x)
+
   index = as.numeric(cycle(x))
   values = seq_len(frequency(x))
 

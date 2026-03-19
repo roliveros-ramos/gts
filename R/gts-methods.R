@@ -93,6 +93,8 @@ apply_gts = function(x, FUN, type=c("time", "space", "latitude", "longitude"), .
 
   type = match.arg(type)
 
+  x = drop(x)
+
   if(type=="time") MARGIN = seq_along(dim(x))[-c(1,2)]
   if(type=="space") MARGIN = head(seq_along(dim(x)), -1)
   if(type=="latitude") MARGIN = seq_along(dim(x))[-1]
@@ -101,7 +103,18 @@ apply_gts = function(x, FUN, type=c("time", "space", "latitude", "longitude"), .
   out = apply(x$x, MARGIN=MARGIN, FUN=FUN, ...)
 
   if(type=="time") {
-    out = ts(out, start=start(x), frequency=frequency(x))
+    out = ts(out, start=start(x), frequency=frequency(x), names=names(x)[1])
+  }
+  if(type=="space") {
+    x$x = out
+    x$time = NULL
+    x$breaks$time = NULL
+    x$info$time$time = NULL
+    x$info$dim$time = NULL
+    x$info$ts = NULL
+    x$info$climatology = NULL
+    class(x) = "static"
+    return(x)
   }
   return(out)
 }

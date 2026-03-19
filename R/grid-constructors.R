@@ -169,8 +169,10 @@ read_grid = function(filename, varid=NULL, mask=NULL, create_mask=FALSE,
     ind_lon = grep(x=varid, pattern="^lon", ignore.case=TRUE)
     ind_lat = grep(x=varid, pattern="^lat", ignore.case=TRUE)
     ind_exc = c(ind_lon, ind_lat)
-    varid = varid[-ind_exc]
-    ndims = ndims[-ind_exc]
+    if(length(ind_exc)>0) {
+      varid = varid[-ind_exc]
+      ndims = ndims[-ind_exc]
+    }
     # first checks for arrays of dim 3 or more.
     ind   = which(ndims>2)
     # If none is found, check for dim 2. Sometimes file has just one layer...

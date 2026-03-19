@@ -24,8 +24,9 @@ vignettes/*.pdf
 
 # personal files
 
-TODO.Rmd
-TODO.html
-sandbox.R
+TODO.*
+
+sandbox/*
 
 inst/doc
+docs

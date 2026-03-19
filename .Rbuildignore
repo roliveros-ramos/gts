@@ -1,2 +1,11 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^sandbox$
+^sandbox/*
+README.*
+TODO.*
+cran-comments.*

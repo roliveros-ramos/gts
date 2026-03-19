@@ -1,7 +1,7 @@
 Package: gts
 Type: Package
 Title: Gridded time series data manipulation and analysis
-Version: 0.2.9019
+Version: 0.2.9020
 Authors@R: 
     person("Ricardo", "Oliveros-Ramos",
            email = "ricardo.oliveros@gmail.com",
@@ -26,7 +26,6 @@ Imports: akima,
          ncdf4,
          nctools,
          reshape2,
-         sp,
          sf,
          stats,
          stlplus,

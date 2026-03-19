@@ -14,7 +14,7 @@
 #' @param lon,lat Numeric vectors of longitude and latitude coordinates.
 #' @param hires Logical; if `TRUE`, use the high-resolution land polygon layer in
 #'   [is_ocean()] and [is_land()].
-#' @param layer A spatial polygon layer used by [is_over()].
+#' @param layer A sf polygon.
 #'
 #' @details
 #' All functions preserve missing coordinate pairs as `NA` in the output.
@@ -33,55 +33,41 @@
 #' @seealso [make_grid()], [mask()]
 #'
 #' @examples
-#' \dontrun{
-#' is_ocean(c(-75, -70), c(-15, -10))
-#' is_land(c(-75, -70), c(-15, -10))
-#' is_over(c(-75, -70), c(-15, -10), layer = my_polygons)
-#' }
+#' n <- 100
+#' 
+#' exDF <- data.frame(
+#'   lon = runif(n = n, min = -90, max = -70),
+#'   lat = runif(n = n, min = -20, max = -2)
+#' )
+#' 
+#' is_ocean(lon = exDF$lon, lat = exDF$lat)
+#' is_land(lon = exDF$lon, lat = exDF$lat)
 #' @name is_ocean
 NULL
 
 #' @describeIn is_ocean Test whether points fall in the ocean.
 #' @export
-is_ocean = function(lon, lat, hires=FALSE) {
-
-  coords = cbind(lon=lon, lat=lat)
-  out = rep(FALSE, length=nrow(coords))
-  out[which(!complete.cases(coords))] = NA
-  xind = which(complete.cases(coords))
-  coords = coords[xind, ]
-
-  layer = if(isTRUE(hires)) land_hr else land_lr
-
-  crs = suppressWarnings(CRS(proj4string(layer)))
-  sets = SpatialPoints(cbind(lon=coords[, "lon"], lat=coords[, "lat"]),
-                       proj4string=crs)
-  ind = xind[which(is.na(over(sets, layer)))]
-  out[ind] = TRUE
-  return(out)
-}
+is_ocean = function(lon, lat, hires=FALSE) !is_land(lon, lat, hires)
 
 #' @describeIn is_ocean Test whether points fall on land.
 #' @export
-is_land = function(lon, lat, hires=FALSE) return(!is_ocean(lon, lat, hires))
+is_land = function(lon, lat, hires=FALSE){
+  is_over(lon = lon, lat = lat, layer = if(isTRUE(hires)) land_hr else land_lr)
+} 
 
 #' @describeIn is_ocean Test whether points are covered by a polygon layer.
 #' @export
 #' @inheritParams is_ocean
 is_over = function(lon, lat, layer) {
-
-  coords = cbind(lon=lon, lat=lat)
-  out = rep(FALSE, length=nrow(coords))
-  out[which(!complete.cases(coords))] = NA
-  xind = which(complete.cases(coords))
-  coords = coords[xind, ]
-
-  crs = suppressWarnings(CRS(proj4string(layer)))
-  sets = SpatialPoints(cbind(lon=coords[, "lon"], lat=coords[, "lat"]),
-                       proj4string=crs)
-  ind = xind[which(!is.na(over(sets, layer)))]
-  out[ind] = TRUE
-  return(out)
+  
+  coords = data.frame(lon = lon, lat = lat)
+  coords = st_as_sf(x = coords, coords = c("lon", "lat"))
+  
+  st_crs(coords) = st_crs(layer)
+  
+  out = st_join(x = coords, y = cbind(layer, xind = TRUE))
+  
+  return(!is.na(out$xind))
 }
 
 # Internal functions ------------------------------------------------------

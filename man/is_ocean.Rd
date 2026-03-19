@@ -18,7 +18,7 @@ is_over(lon, lat, layer)
 \item{hires}{Logical; if `TRUE`, use the high-resolution land polygon layer in
 [is_ocean()] and [is_land()].}
 
-\item{layer}{A spatial polygon layer used by [is_over()].}
+\item{layer}{A sf polygon.}
 }
 \value{
 A logical vector of the same length as `lon` and `lat`.
@@ -58,11 +58,15 @@ layer (`land_lr` or `land_hr`).
 
 }}
 \examples{
-\dontrun{
-is_ocean(c(-75, -70), c(-15, -10))
-is_land(c(-75, -70), c(-15, -10))
-is_over(c(-75, -70), c(-15, -10), layer = my_polygons)
-}
+n <- 100
+
+exDF <- data.frame(
+  lon = runif(n = n, min = -90, max = -70),
+  lat = runif(n = n, min = -20, max = -2)
+)
+
+is_ocean(lon = exDF$lon, lat = exDF$lat)
+is_land(lon = exDF$lon, lat = exDF$lat)
 }
 \seealso{
 [make_grid()], [mask()]

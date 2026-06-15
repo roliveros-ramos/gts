@@ -225,8 +225,10 @@ mask.matrix = function(x, ...) {
     is_land(lon=out$lon, lat=out$lat, hires=hires)
   }
 
-  gg = array(0 + ind, dim=c(dim(grid$LAT), nrow(off)))
-  gg = apply(gg, 1:2, mean)
+  gg = rowMeans(matrix(0 + ind, nrow=nrow(grid$df)))
+  dim(gg) = dim(grid$LAT)
+  # gg = array(0 + ind, dim=c(dim(grid$LAT), nrow(off)))
+  # gg = apply(gg, 1:2, mean)
 
   mask = 0 + (gg >= thr)
   mask[mask==0] = NA # remove 'land'

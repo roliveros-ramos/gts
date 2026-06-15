@@ -34,12 +34,12 @@
 #'
 #' @examples
 #' n <- 100
-#' 
+#'
 #' exDF <- data.frame(
 #'   lon = runif(n = n, min = -90, max = -70),
 #'   lat = runif(n = n, min = -20, max = -2)
 #' )
-#' 
+#'
 #' is_ocean(lon = exDF$lon, lat = exDF$lat)
 #' is_land(lon = exDF$lon, lat = exDF$lat)
 #' @name is_ocean
@@ -53,20 +53,22 @@ is_ocean = function(lon, lat, hires=FALSE) !is_land(lon, lat, hires)
 #' @export
 is_land = function(lon, lat, hires=FALSE){
   is_over(lon = lon, lat = lat, layer = if(isTRUE(hires)) land_hr else land_lr)
-} 
+}
 
 #' @describeIn is_ocean Test whether points are covered by a polygon layer.
 #' @export
 #' @inheritParams is_ocean
 is_over = function(lon, lat, layer) {
-  
+
   coords = data.frame(lon = lon, lat = lat)
   coords = st_as_sf(x = coords, coords = c("lon", "lat"))
-  
+  coords$ind = seq_len(nrow(coords))
   st_crs(coords) = st_crs(layer)
-  
+
   out = st_join(x = coords, y = cbind(layer, xind = TRUE))
-  
+  xx = which(duplicated(out$ind))
+  if(length(xx)>0) out = out[-xx, ]
+
   return(!is.na(out$xind))
 }
 

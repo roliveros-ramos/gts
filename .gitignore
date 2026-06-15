@@ -30,3 +30,9 @@ sandbox/*
 
 inst/doc
 docs
+
+# issues
+create_issues.sh
+issues/*
+
+.positai

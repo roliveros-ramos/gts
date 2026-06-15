@@ -9,3 +9,8 @@
 README.*
 TODO.*
 cran-comments.*
+create_issues.sh
+^issues$
+^issues/*
+^\.positai$
+^\.claude$

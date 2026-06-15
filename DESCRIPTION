@@ -1,16 +1,20 @@
 Package: gts
 Type: Package
-Title: Gridded time series data manipulation and analysis
-Version: 0.2.9020
+Title: Tools for Gridded Environmental Time-Series Analysis
+Version: 0.2.9021
 Authors@R: 
     person("Ricardo", "Oliveros-Ramos",
            email = "ricardo.oliveros@gmail.com",
            role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8069-2101"))
-Description: Management of gridded time-series (arrays with a time dimension),
-    with geographical dimensions (longitude, latitude, depth/altitude). The package provides
-    methods to read and write gridded time-series (GTS) objects and manage them using
-    R time-series methods. 
+Description: Lightweight tools for handling gridded environmental data in
+    ecological workflows, with particular emphasis on time-varying
+    environmental drivers and time-invariant spatial covariates. The package
+    provides classes and methods for importing, manipulating, summarising and
+    exporting gridded data, especially from netCDF files, while preserving
+    spatial and temporal metadata. Core workflows include subsetting,
+    interpolation, regridding, climatology and time-series analysis, vertical
+    integration, and merging gridded variables with observation records.
 License: GPL-3
 Depends: R (>= 3.5.0)
 Imports: akima,
